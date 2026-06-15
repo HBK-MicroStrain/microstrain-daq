@@ -10,7 +10,7 @@
 function(get_project_version_from_git_tag PROJECT_PREFIX FULL_VERSION_OUT NUMERIC_VERSION_OUT)
     execute_process(
         COMMAND git describe --tags --match "${PROJECT_PREFIX}*" --dirty
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         OUTPUT_VARIABLE GIT_TAG
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
