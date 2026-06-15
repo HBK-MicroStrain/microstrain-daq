@@ -19,4 +19,5 @@ source = "vcs"
 raw-options = { root = ".." }
 
 [tool.hatch.build.targets.wheel]
+packages = ["daq_utils/python"]
 sources = {"daq_utils/python" = "daq_utils"}
