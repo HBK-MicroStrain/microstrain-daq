@@ -13,6 +13,29 @@ Companion tools to enhance working with the MicroStrain Wireless OpenDAQ module:
 
 ### Installation
 
+#### C++
+
+Add the library to your project using CMake FetchContent, replacing `<version>` with the desired release tag:
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(
+    MicroStrainDaqUtils
+    GIT_REPOSITORY https://github.com/hbkworld/microstrain-daq-utils.git
+    GIT_TAG        <version>
+)
+FetchContent_MakeAvailable(MicroStrainDaqUtils)
+
+target_link_libraries(your_target PRIVATE microstrain::daq_utils)
+```
+
+To import the library into your project:
+
+```cpp
+#include <daq_utils/daq_utils.h>
+#include <daq_utils/wireless.h>
+```
+
 #### Python
 
 ```
@@ -117,6 +140,17 @@ source ~/.bashrc
 
 Then pass the path when creating your openDAQ instance:
 
+**C++**
+```cpp
+#include <opendaq/opendaq.h>
+
+daq::InstanceBuilderPtr builder = daq::InstanceBuilder();
+if (const char* modulePath = std::getenv("OPENDAQ_MODULE_PATH")) {
+    builder.setModulePath(modulePath);
+}
+daq::InstancePtr instance = builder.build();
+```
+
 **Python**
 ```python
 import os
@@ -143,6 +177,14 @@ var instance = builder.Build();
 
 This code snippet will display a list of all currently available devices:
 
+**C++**
+```cpp
+for (daq::DeviceInfoPtr deviceInfo : instance.getAvailableDevices()) {
+    std::cout << "Name: " << deviceInfo.getName()
+              << " Connection string: " << deviceInfo.getConnectionString() << "\n";
+}
+```
+
 **Python**
 ```python
 for device_info in instance.available_devices:
@@ -158,6 +200,11 @@ foreach (var deviceInfo in instance.AvailableDevices)
 ### Adding devices
 
 Add a device using its connection string:
+
+**C++**
+```cpp
+daq::DevicePtr device = instance.addDevice("microstrain-wireless://COM46:3000000");
+```
 
 **Python**
 ```python
@@ -175,6 +222,11 @@ Connection strings are in the format: `prefix://address`.
 
 When you are ready to remove the device:
 
+**C++**
+```cpp
+instance.removeDevice(device);
+```
+
 **Python**
 ```python
 instance.remove_device(device)
@@ -191,6 +243,11 @@ This will disconnect the device so you can use it in other applications.
 
 Get a reference to a channel using it's index:
 
+**C++**
+```cpp
+daq::ChannelPtr channel = device.getChannels()[0];
+```
+
 **Python**
 ```python
 channel = device.get_channels()[0]
@@ -205,6 +262,11 @@ var channel = device.GetChannels()[0];
 
 Properties are organized into `groups`. To print available property groups for a device, channel, group, or other root:
 
+**C++**
+```cpp
+daq_utils::PrintGroups(channel);
+```
+
 **Python**
 ```python
 daq_utils.print_groups(channel)
@@ -216,6 +278,11 @@ DaqUtils.PrintGroups(channel);
 ```
 
 To get the groups as a list instead:
+
+**C++**
+```cpp
+std::vector<std::string> groups = daq_utils::Groups(channel);
+```
 
 **Python**
 ```python
@@ -231,6 +298,11 @@ DaqUtils.Groups(channel);
 
 To print all properties across every group:
 
+**C++**
+```cpp
+daq_utils::PrintProperties(channel);
+```
+
 **Python**
 ```python
 daq_utils.print_properties(channel)
@@ -243,6 +315,11 @@ DaqUtils.PrintProperties(channel);
 
 To filter to a specific group:
 
+**C++**
+```cpp
+daq_utils::PrintProperties(channel, "Setup.Configure.Sampling");
+```
+
 **Python**
 ```python
 daq_utils.print_properties(channel, 'Setup.Configure.Sampling')
@@ -254,6 +331,12 @@ DaqUtils.PrintProperties(channel, "Setup.Configure.Sampling");
 ```
 
 To get the properties as a list instead:
+
+**C++**
+```cpp
+std::vector<daq_utils::PropertyInfo> props = daq_utils::Properties(channel);
+std::vector<daq_utils::PropertyInfo> props = daq_utils::Properties(channel, "Setup.Configure.Sampling");
+```
 
 **Python**
 ```python
@@ -271,6 +354,11 @@ DaqUtils.Properties(channel, "Setup.Configure.Sampling");
 
 If you know a property name but not its full path, use `find` to get its full dot-notation path:
 
+**C++**
+```cpp
+std::string path = daq_utils::Find(channel, "LostBeaconTimeout");
+```
+
 **Python**
 ```python
 daq_utils.find(channel, 'LostBeaconTimeout')
@@ -282,6 +370,11 @@ DaqUtils.Find(channel, "LostBeaconTimeout");
 ```
 
 This can also be used for finding groups:
+
+**C++**
+```cpp
+std::string path = daq_utils::Find(channel, "Sampling");
+```
 
 **Python**
 ```python
@@ -297,6 +390,11 @@ DaqUtils.Find(channel, "Sampling");
 
 Properties can be accessed using dot-notation paths:
 
+**C++**
+```cpp
+daq::BaseObjectPtr timeout = channel.getPropertyValue("Setup.Configure.Sampling.LostBeaconTimeout");
+```
+
 **Python**
 ```python
 timeout = channel.get_property_value('Setup.Configure.Sampling.LostBeaconTimeout')
@@ -308,6 +406,11 @@ var timeout = channel.GetPropertyValue("Setup.Configure.Sampling.LostBeaconTimeo
 ```
 
 They can also be set:
+
+**C++**
+```cpp
+channel.setPropertyValue("Setup.Configure.Sampling.LostBeaconTimeout", 7);
+```
 
 **Python**
 ```python
@@ -323,6 +426,11 @@ channel.SetPropertyValue("Setup.Configure.Sampling.LostBeaconTimeout", (IntegerO
 
 To view a function property's description, arguments, and return type, read the `description` field from the property:
 
+**C++**
+```cpp
+std::cout << channel.getProperty("Capabilities.MaxSweeps").getDescription() << "\n";
+```
+
 **Python**
 ```python
 print(channel.get_property('Capabilities.MaxSweeps').description)
@@ -337,6 +445,11 @@ Console.WriteLine(channel.GetProperty("Capabilities.MaxSweeps").Description);
 
 Function properties can be called directly through the openDAQ API, but the wrapper simplifies the syntax. To call a function with no arguments using the wrapper:
 
+**C++**
+```cpp
+daq::BaseObjectPtr result = daq_utils::Call(channel, "Setup.Configure.Apply");
+```
+
 **Python**
 ```python
 result = daq_utils.call(channel, "Setup.Configure.Apply")
@@ -349,6 +462,11 @@ var result = DaqUtils.Call(channel, "Setup.Configure.Apply");
 
 To call a function with arguments:
 
+**C++**
+```cpp
+daq::BaseObjectPtr result = daq_utils::Call(channel, "Capabilities.InputRangesWithVoltage", {0xFF, 5000});
+```
+
 **Python**
 ```python
 result = daq_utils.call(channel, "Capabilities.InputRangesWithVoltage", 0xFF, 5000)
@@ -360,6 +478,11 @@ var result = DaqUtils.Call(channel, "Capabilities.InputRangesWithVoltage", (Inte
 ```
 
 The result object can then be queried for any returned properties. For example:
+
+**C++**
+```cpp
+daq::BaseObjectPtr success = result.asPtr<daq::IPropertyObject>().getPropertyValue("Success");
+```
 
 **Python**
 ```python
@@ -375,6 +498,11 @@ var success = result?.Cast<PropertyObject>()?.GetPropertyValue("Success");
 
 To view what fields/values are available for openDAQ `Enumeration` and `Struct` types, create a `DaqTypeInspector`:
 
+**C++**
+```cpp
+daq_utils::DaqTypeInspector inspector(instance);
+```
+
 **Python**
 ```python
 inspector = daq_utils.DaqTypeInspector(instance)
@@ -386,6 +514,11 @@ var inspector = new DaqTypeInspector(instance);
 ```
 
 To inspect a type:
+
+**C++**
+```cpp
+inspector.Describe("MSCL_Wireless_AutoCalCompletionFlag");
+```
 
 **Python**
 ```python
@@ -401,6 +534,11 @@ inspector.Describe("MSCL_Wireless_AutoCalCompletionFlag");
 
 To create openDAQ typed values such as `Enumerations` and `Structs`, use `DaqTypeFactory`. It handles the type manager and string conversion automatically:
 
+**C++**
+```cpp
+daq_utils::DaqTypeFactory daqTypes(instance);
+```
+
 **Python**
 ```python
 daq_types = daq_utils.DaqTypeFactory(instance)
@@ -412,6 +550,11 @@ var daqTypes = new DaqTypeFactory(instance);
 ```
 
 #### Creating an enum value
+
+**C++**
+```cpp
+daq::EnumerationPtr voltage = daqTypes.MakeEnum("MSCL_Wireless_Voltage", "voltage_3000mV");
+```
 
 **Python**
 ```python
@@ -425,7 +568,20 @@ var voltage = daqTypes.MakeEnum("MSCL_Wireless_Voltage", "voltage_3000mV");
 
 #### Creating a Struct value
 
-Pass a Python dict with the struct's fields to `struct()`. Python primitives are converted automatically, and openDAQ types such as enumerations are passed through as-is:
+**C++**
+```cpp
+daq::StructPtr cmdInfo = daqTypes.MakeStruct("MSCL_Wireless_ShuntCalCmdInfo",
+{
+    {"UseInternalShunt",  daq::Boolean(true)},
+    {"NumActiveGauges",   daq::Integer(1)},
+    {"GaugeResistance",   daq::Integer(350)},
+    {"ShuntResistance",   daq::Integer(100000)},
+    {"GaugeFactor",       daq::Float(2.0)},
+    {"InputRange",        daqTypes.MakeEnum("MSCL_Wireless_InputRange", "range_14_545mV")},
+    {"HardwareOffset",    daq::Integer(0)},
+    {"ExcitationVoltage", daqTypes.MakeEnum("MSCL_Wireless_Voltage", "voltage_1500mV")}
+});
+```
 
 **Python**
 ```python
