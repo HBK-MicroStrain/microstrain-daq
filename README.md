@@ -583,8 +583,6 @@ daq::StructPtr cmdInfo = daqTypes.MakeStruct("MSCL_Wireless_ShuntCalCmdInfo",
 });
 ```
 
-Pass a Python dict with the struct's fields to `struct()`. Python primitives are converted automatically, and openDAQ types such as enumerations are passed through as-is:
-
 **Python**
 ```python
 cmd_info = daq_types.struct(
