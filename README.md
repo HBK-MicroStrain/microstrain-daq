@@ -516,17 +516,17 @@ To inspect a type:
 
 **C++**
 ```cpp
-inspector.Describe("MSCL_Wireless_AutoCalCompletionFlag");
+inspector.Describe("AutoCalCompletionFlag");
 ```
 
 **Python**
 ```python
-inspector.describe('MSCL_Wireless_AutoCalCompletionFlag')
+inspector.describe('AutoCalCompletionFlag')
 ```
 
 **C#**
 ```csharp
-inspector.Describe("MSCL_Wireless_AutoCalCompletionFlag");
+inspector.Describe("AutoCalCompletionFlag");
 ```
 
 ### Creating typed values
@@ -552,65 +552,65 @@ var daqTypes = new DaqTypeFactory(instance);
 
 **C++**
 ```cpp
-daq::EnumerationPtr voltage = daqTypes.MakeEnum("MSCL_Wireless_Voltage", "voltage_3000mV");
+daq::EnumerationPtr voltage = daqTypes.MakeEnum("Voltage", "voltage_3000mV");
 ```
 
 **Python**
 ```python
-voltage = daq_types.enum("MSCL_Wireless_Voltage", "voltage_3000mV")
+voltage = daq_types.enum("Voltage", "voltage_3000mV")
 ```
 
 **C#**
 ```csharp
-var voltage = daqTypes.MakeEnum("MSCL_Wireless_Voltage", "voltage_3000mV");
+var voltage = daqTypes.MakeEnum("Voltage", "voltage_3000mV");
 ```
 
 #### Creating a Struct value
 
 **C++**
 ```cpp
-daq::StructPtr cmdInfo = daqTypes.MakeStruct("MSCL_Wireless_ShuntCalCmdInfo",
+daq::StructPtr cmdInfo = daqTypes.MakeStruct("ShuntCalCmdInfo",
 {
     {"UseInternalShunt",  daq::Boolean(true)},
     {"NumActiveGauges",   daq::Integer(1)},
     {"GaugeResistance",   daq::Integer(350)},
     {"ShuntResistance",   daq::Integer(100000)},
     {"GaugeFactor",       daq::Float(2.0)},
-    {"InputRange",        daqTypes.MakeEnum("MSCL_Wireless_InputRange", "range_14_545mV")},
+    {"InputRange",        daqTypes.MakeEnum("InputRange", "range_14_545mV")},
     {"HardwareOffset",    daq::Integer(0)},
-    {"ExcitationVoltage", daqTypes.MakeEnum("MSCL_Wireless_Voltage", "voltage_1500mV")}
+    {"ExcitationVoltage", daqTypes.MakeEnum("Voltage", "voltage_1500mV")}
 });
 ```
 
 **Python**
 ```python
 cmd_info = daq_types.struct(
-    "MSCL_Wireless_ShuntCalCmdInfo",
+    "ShuntCalCmdInfo",
     {
         "UseInternalShunt": True,
         "NumActiveGauges": 1,
         "GaugeResistance": 350,
         "ShuntResistance": 100000,
         "GaugeFactor": 2.0,
-        "InputRange": daq_types.enum("MSCL_Wireless_InputRange", "range_14_545mV"),
+        "InputRange": daq_types.enum("InputRange", "range_14_545mV"),
         "HardwareOffset": 0,
-        "ExcitationVoltage": daq_types.enum("MSCL_Wireless_Voltage", "voltage_1500mV")
+        "ExcitationVoltage": daq_types.enum("Voltage", "voltage_1500mV")
     }
 )
 ```
 
 **C#**
 ```csharp
-var cmdInfo = daqTypes.MakeStruct("MSCL_Wireless_ShuntCalCmdInfo", new Dictionary<string, object>
+var cmdInfo = daqTypes.MakeStruct("ShuntCalCmdInfo", new Dictionary<string, object>
 {
     ["UseInternalShunt"] = true,
     ["NumActiveGauges"] = 1,
     ["GaugeResistance"] = 350,
     ["ShuntResistance"] = 100000,
     ["GaugeFactor"] = 2.0,
-    ["InputRange"] = daqTypes.MakeEnum("MSCL_Wireless_InputRange", "range_14_545mV"),
+    ["InputRange"] = daqTypes.MakeEnum("InputRange", "range_14_545mV"),
     ["HardwareOffset"] = 0,
-    ["ExcitationVoltage"] = daqTypes.MakeEnum("MSCL_Wireless_Voltage", "voltage_1500mV")
+    ["ExcitationVoltage"] = daqTypes.MakeEnum("Voltage", "voltage_1500mV")
 });
 ```
 
