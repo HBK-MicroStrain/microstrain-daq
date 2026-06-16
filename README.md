@@ -180,8 +180,7 @@ This code snippet will display a list of all currently available devices:
 **C++**
 ```cpp
 for (daq::DeviceInfoPtr deviceInfo : instance.getAvailableDevices()) {
-    std::cout << "Name: " << deviceInfo.getName()
-              << " Connection string: " << deviceInfo.getConnectionString() << "\n";
+    std::cout << "Name: " << deviceInfo.getName() << " Connection string: " << deviceInfo.getConnectionString() << "\n";
 }
 ```
 
@@ -614,3 +613,42 @@ var cmdInfo = daqTypes.MakeStruct("MSCL_Wireless_ShuntCalCmdInfo", new Dictionar
     ["ExcitationVoltage"] = daqTypes.MakeEnum("MSCL_Wireless_Voltage", "voltage_1500mV")
 });
 ```
+
+## Troubleshooting
+
+### Listing detected modules
+
+If a device isn't being detected, run this to check whether the module is loaded:
+
+#### C++
+
+```cpp
+for (const daq::ModulePtr& module : instance.getModuleManager().getModules()) {
+    daq::ModuleInfoPtr info = module.getModuleInfo();
+    daq::VersionInfoPtr v = info.getVersionInfo();
+    std::cout << info.getName() << " (" << info.getId() << ") v" << v.getMajor() << "." << v.getMinor() << "." << v.getPatch() << "\n";
+}
+```
+
+#### Python
+
+```python
+for module in instance.module_manager.modules:
+    info = module.module_info
+    v = info.version_info
+    print(f"{info.name} ({info.id}) v{v.major}.{v.minor}.{v.patch}")
+```
+
+#### C#
+
+```csharp
+foreach (var module in instance.ModuleManager.Modules)
+{
+    var info = module.ModuleInfo;
+    var v = info.VersionInfo;
+    Console.WriteLine($"{info.Name} ({info.Id}) v{v.Major}.{v.Minor}.{v.Patch}");
+}
+```
+
+- **Module appears** — the module loaded, but something is preventing device detection
+- **Module missing** — the module itself is not being loaded
