@@ -30,6 +30,43 @@ def pingNode(node):
 >    - The Node is in Idle Mode (not sampling, and not sleeping)
 >    - The Node is on the same communication protocol as the BaseStation (LXRS vs LXRS+)
 
+### Setting to Idle
+
+To set a Node to Idle:
+
+```
+def setToIdle(node):
+    # Call the set to idle function and get the resulting SetToIdleStatus object
+    # Note: This starts the set to idle node command, which is an ongoing operation. The SetToIdleStatus should be queried for progress.
+    status = node.setToIdle()
+
+    print("Setting Node to Idle")
+
+    # Using the SetToIdleStatus object, check if the Set to Idle operation is complete.
+    # Note: We are specifying a timeout of 300 milliseconds here, which is the maximum
+    #       amount of time that the complete function will block if the Set to Idle
+    #       operation has not finished. Leaving this blank defaults to a timeout of 10ms.
+    while not status.complete(300):
+        # Note: the Set to Idle operation can be canceled by calling status.cancel()
+        print(".", end="")
+
+    # At this point, the Set to Idle operation has completed
+
+    # Check the result of the Set to Idle operation
+    result = status.result()
+
+    # Completed successfully
+    if result == mscl.SetToIdleStatus.setToIdleResult_success:
+        print("Successfully set to idle!")
+    # Canceled by the user
+    elif result == mscl.SetToIdleStatus.setToIdleResult_canceled:
+        # Canceled by the user
+        print("Set to Idle was canceled!")
+    # Failed to perform the operation
+    else:
+        print("Set to Idle has failed!")
+```
+
 ### Getting Current Configuration Settings
 
 To read current configuration settings on the node:
