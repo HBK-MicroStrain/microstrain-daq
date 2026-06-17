@@ -2,7 +2,7 @@
 
 ### Pinging Nodes
 
-This code snippet provides the function to ping nodes.
+This code snippet provides the function to ping nodes:
 
 ```
 def pingNode(node):
@@ -117,3 +117,41 @@ Many other functions are available for the SyncSamplingNetwork:
 |network.refresh() | Refreshes the entire network. Should be called any time a change is made to the node after it has been added to the network. |
 |network.removeNode() | Remove a node from the network. |
 | network.getNodeNetworkInfo(nodeAddress) | Get network information for an individual node in the network (TDMA address, percent bandwidth, etc.) |
+
+### Enabling Beacons
+
+To enable a beacon:
+
+```
+# Make sure we can ping the base station
+if not baseStation.ping():
+    print("Failed to ping the Base Station")
+
+if baseStation.features().supportsBeaconStatus():
+    status = baseStation.beaconStatus()
+    print("Beacon current status: Enabled?: {0}".format("TRUE" if status.enabled() else "FALSE"), end="")
+    print(" Time: {0}".format(status.timestamp()))
+
+print("Attempting to enable the beacon...")
+
+# Enable the beacon on the Base Station using the PC time
+beaconTime = baseStation.enableBeacon()
+
+# If we got here, no exception was thrown, so enableBeacon was successful
+print("Successfully enabled the beacon on the Base Station")
+print("Beacon's initial Timestamp: {0}".format(beaconTime))
+
+print("Beacon is active")
+```
+
+### Disabling Beacons
+
+To disable a beacon:
+
+```
+# Disable the beacon on the Base Station
+baseStation.disableBeacon()
+
+# If we got here, no exception was thrown, so disableBeacon was successful
+print("Successfully disabled the beacon on the Base Station")
+```
