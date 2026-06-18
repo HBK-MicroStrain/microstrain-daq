@@ -84,25 +84,25 @@ This code snippet provides the function to start sync sampling:
 
 ```
 # Select nodes
-for node in device.get_channels():
+for node in base_station.get_channels():
     print(f"Adding node {node.get_property_value('Advanced.NodeAddress')}")
 
     # Enable the node for sampling
     node.set_property_value('Control.Sample.Enabled', True)
 
     # Add the node to the network
-    add_result = daq_utils.call(device, 'Control.Sample.AddNode', node.get_property_value('Advanced.NodeAddress'))
+    add_result = daq_utils.call(base_station, 'Control.Sample.AddNode', node.get_property_value('Advanced.NodeAddress'))
     if not add_result.get_property_value('Success'):
         print(f"Adding node failed: {add_result.get_property_value('Error')}")
 
 # Can get information about the network
 print("Network info:")
-print("Network OK: {0}".format(device.get_property_value("Control.Sample.IsValid")))
-print(f"Percent of Bandwidth: {(device.get_property_value("Control.Sample.NetworkBandwidth"))}%")
-print("Lossless Enabled: {0}".format(device.get_property_value("Control.Sample.Lossless")))
+print("Network OK: {0}".format(base_station.get_property_value("Control.Sample.IsValid")))
+print(f"Percent of Bandwidth: {(base_station.get_property_value("Control.Sample.NetworkBandwidth"))}%")
+print("Lossless Enabled: {0}".format(base_station.get_property_value("Control.Sample.Lossless")))
 
 # Start the network once all nodes have been added
-start_result = daq_utils.call(device, 'Control.Sample.ApplyAndStartNetwork')
+start_result = daq_utils.call(base_station, 'Control.Sample.ApplyAndStartNetwork')
 print(f"Start network succeeded: {start_result.get_property_value('Success')}")
 ```
 
