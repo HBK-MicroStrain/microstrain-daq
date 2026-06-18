@@ -1,6 +1,6 @@
-## Usage
+## Wireless Python Examples
 
-This document provides examples of common operations with wireless devices.
+This document provides examples of common operations with wireless devices using the Python API.
 
 ### Pinging Nodes
 
