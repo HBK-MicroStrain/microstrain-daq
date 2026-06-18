@@ -614,6 +614,98 @@ var cmdInfo = daqTypes.MakeStruct("ShuntCalCmdInfo", new Dictionary<string, obje
 });
 ```
 
+### Using openDAQ containers
+
+#### Structs
+
+To read a field from a struct by name:
+
+**C++**
+```cpp
+daq::StructPtr struct_val = result.asPtr<daq::IStruct>();
+daq::BaseObjectPtr field = struct_val.get("FieldName");
+```
+
+**Python**
+```python
+field = struct_val.FieldName
+```
+
+**C#**
+```csharp
+var field = struct_val.Cast<Struct>()?.Get("FieldName");
+```
+
+To iterate over all fields:
+
+**C++**
+```cpp
+daq::StructPtr struct_val = result.asPtr<daq::IStruct>();
+for (const daq::StringPtr& name : struct_val.getFieldNames()) {
+    std::cout << name << ": " << struct_val.get(name) << "\n";
+}
+```
+
+**Python**
+```python
+for name in struct_val.struct_type.field_names:
+    print(name, getattr(struct_val, name))
+```
+
+**C#**
+```csharp
+var struct_val = result.Cast<Struct>();
+foreach (string name in struct_val.FieldNames)
+    Console.WriteLine($"{name}: {struct_val.Get(name)}");
+```
+
+> **Note:** To see what fields a struct type contains, see [Inspecting types](#inspecting-types).
+
+#### Lists
+
+To access an item by index:
+
+**C++**
+```cpp
+daq::ListPtr<daq::IBaseObject> list = result.asPtr<daq::IList<daq::IBaseObject>>();
+daq::BaseObjectPtr first = list[0];
+```
+
+**Python**
+```python
+first = result[0]
+```
+
+**C#**
+```csharp
+var list = result.Cast<IListObject<BaseObject>>();
+var first = list[0];
+```
+
+To iterate over all items:
+
+**C++**
+```cpp
+daq::ListPtr<daq::IBaseObject> list = result.asPtr<daq::IList<daq::IBaseObject>>();
+for (const daq::BaseObjectPtr& item : list) {
+    std::cout << item << "\n";
+}
+```
+
+**Python**
+```python
+for item in result:
+    print(item)
+```
+
+**C#**
+```csharp
+var list = result.Cast<IListObject<BaseObject>>();
+foreach (var item in list)
+    Console.WriteLine(item);
+```
+
+
 ## Troubleshooting
 
 ### Listing detected modules
