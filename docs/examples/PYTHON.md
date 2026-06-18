@@ -1,27 +1,28 @@
 ## Usage
 
+This document provides examples of common operations with wireless devices.
+
 ### Pinging Nodes
 
-This code snippet provides the function to ping nodes:
+A ping is a byte transmitted by the gateway to the node. If the byte is echoed by the node, existing communication is indicated between the node and gateway.
 
 ```
-def pingNode(node):
-    response = node.ping()
+result = daq_utils.call(node, "Control.Ping")
 
-    if response.success():
+if result.get_property_value('Success'):
     
-        # Get some details from the response
-        print("Successfully pinged Node {0}".format(node.nodeAddress()))
-        print("Base Station RSSI: {0}".format(response.baseRssi()))
-        print("Node RSSI: {0}".format(response.nodeRssi()))
+    # Get some details from the response
+    print("Successfully pinged Node {0}".format(node.get_property_value('Advanced.NodeAddress')))
+    print("Base Station RSSI: {0}".format(result.get_property_value('BaseRssi')))
+    print("Node RSSI: {0}".format(result.get_property_value('NodeRssi')))
 
-        # We can talk to the Node, so let's get some more info
-        print("Node Information:")
-        print("Model Number: {0}".format(node.model()))
-        print("Serial: {0}".format(node.serial()))
-        print("Firmware: {0}\n".format(node.firmwareVersion()))
-    else:
-        print("Failed to ping Node {0}".format(node.nodeAddress()))
+    # We can talk to the Node, so let's get some more info
+    print("Node Information:")
+    print("Model Number: {0}".format(node.get_property_value('Advanced.ModelName')))
+    print("Serial: {0}".format(node.get_property_value('Advanced.Serial')))
+    print("Firmware: {0}\n".format(node.get_property_value('Advanced.FirmwareVersion')))
+else:
+    print("Failed to ping Node {0}".format(node.get_property_value('Advanced.NodeAddress')))
 ```
 > **Note: To communicate with a Wireless Node, all the following must be true:**
 >
@@ -30,81 +31,7 @@ def pingNode(node):
 >    - The Node is in Idle Mode (not sampling, and not sleeping)
 >    - The Node is on the same communication protocol as the BaseStation (LXRS vs LXRS+)
 
-### Setting to Idle
 
-To set a Node to Idle:
-
-```
-def setToIdle(node):
-    # Call the set to idle function and get the resulting SetToIdleStatus object
-    # Note: This starts the set to idle node command, which is an ongoing operation. The SetToIdleStatus should be queried for progress.
-    status = node.setToIdle()
-
-    print("Setting Node to Idle")
-
-    # Using the SetToIdleStatus object, check if the Set to Idle operation is complete.
-    # Note: We are specifying a timeout of 300 milliseconds here, which is the maximum
-    #       amount of time that the complete function will block if the Set to Idle
-    #       operation has not finished. Leaving this blank defaults to a timeout of 10ms.
-    while not status.complete(300):
-        # Note: the Set to Idle operation can be canceled by calling status.cancel()
-        print(".", end="")
-
-    # At this point, the Set to Idle operation has completed
-
-    # Check the result of the Set to Idle operation
-    result = status.result()
-
-    # Completed successfully
-    if result == mscl.SetToIdleStatus.setToIdleResult_success:
-        print("Successfully set to idle!")
-    # Canceled by the user
-    elif result == mscl.SetToIdleStatus.setToIdleResult_canceled:
-        # Canceled by the user
-        print("Set to Idle was canceled!")
-    # Failed to perform the operation
-    else:
-        print("Set to Idle has failed!")
-```
-
-### Getting Current Configuration Settings
-
-To read current configuration settings on the node:
-
-```
-def getCurrentConfig(node):
-    print("Current Configuration Settings")
-
-    # Read some of the current configuration settings on the node
-    print("# of Triggers: {0}".format(node.getNumDatalogSessions()))
-    print("User Inactivity Timeout: {0} seconds".format(node.getInactivityTimeout()))
-    print("Total active channels: {0}".format(node.getActiveChannels().count()))
-    print("# of sweeps: {0}".format(node.getNumSweeps()))
-```
-
-If a configuration function requires a ChannelMask parameter, this indicates that the option may affect 1 or more channels on the Node. For instance, a hardware gain may affect ch1 and ch2 with just 1 setting. If you know the mask for your Node, you can provide that mask when asking for the configuration. If you want to programmatically determine the mask for each setting, you can ask for the Node's ChannelGroups. Add the following code to the previous snippet.
-
-```
-    # Get the ChannelGroups that the node supports
-    chGroups = node.features().channelGroups()
-
-    # Iterate over each channel group
-    for group in chGroups:
-        # Get all the settings for this group (i.e., may contain linear equation and hardware gain).
-        groupSettings = group.settings()
-
-        # Iterate over each setting for this group
-        for setting in groupSettings:
-            # If the group contains the linear equation setting
-            if setting == mscl.WirelessTypes.chSetting_linearEquation:
-                # We can now pass the channel mask (group.channels()) for this group to the node.getLinearEquation function.
-                # Note: once this channel mask is known for a specific node (+ fw version), it should never change
-                le = node.getLinearEquation(group.channels())
-
-                print("Linear Equation for: {0}".format(group.name()))
-                print("Slope: {0:06.3f}".format(le.slope()))
-                print("Offset: {0:06.3f}".format(le.offset()))
-```
 
 ### Setting Current Configuration Settings
 
@@ -113,110 +40,62 @@ To set current configuration settings for a node:
 > Note: This example only changes a small subset of settings. More settings are available. Please reference the documentation for the full list of functions.
 
 ```
-def setCurrentConfig(node):
-    print("\nChanging configuration settings...", end="")
+print("\nChanging configuration settings...", end="")
 
-    # Create a WirelessNodeConfig which is used to set all node configuration options
-    config = mscl.WirelessNodeConfig()
+# Set the configuration options that we want to change
+node.set_property_value('Setup.Configure.Power.DefaultMode', daq_types.enum("DefaultMode", "defaultMode_idle"))
+node.set_property_value('Setup.Configure.Power.InactivityTimeout', 7200)
+node.set_property_value('Control.Sample.SamplingMode', daq_types.enum("SamplingMode", "samplingMode_sync"))
+node.set_property_value('Control.Sample.SampleRate', daq_types.enum("WirelessSampleRate", "sampleRate_256Hz"))
+node.set_property_value('Control.Sample.UnlimitedDuration', True)
 
-    # Set the configuration options that we want to change
-    config.defaultMode(mscl.WirelessTypes.defaultMode_idle)
-    config.inactivityTimeout(7200)
-    config.samplingMode(mscl.WirelessTypes.samplingMode_sync)
-    config.sampleRate(mscl.WirelessTypes.sampleRate_256Hz)
-    config.unlimitedDuration(True)
+# Attempt to verify the configuration with the Node we want to apply it to
+#  Note: This step is not required before applying; however, the apply will throw an
+#        Error_InvalidNodeConfig exception if the config fails to verify.
+verification = daq_utils.call(node, "Setup.Configure.Verify")
 
-    # Attempt to verify the configuration with the Node we want to apply it to
-    #  Note: This step is not required before applying; however, the apply will throw an
-    #        Error_InvalidNodeConfig exception if the config fails to verify.
-    issues = mscl.ConfigIssues()
+if not verification.get_property_value("Success"):
+    print("\nFailed to verify the configuration. The following issues were found:")
 
-    if not node.verifyConfig(config, issues):
-        print("\nFailed to verify the configuration. The following issues were found:")
+    # Print out all the issues that were found
+    print(verification.get_property_value("Issues"))
 
+    print("Configuration will not be applied.")
+else:
+    # Apply the configuration to the Node
+    # Note: This writes multiple options to the Node. If an Error_NodeCommunication 
+    #       exception is thrown, it is possible that some options were successfully 
+    #       applied, while others failed. It is recommended to keep calling 
+    #       Apply until no exception is thrown.
+    application =  daq_utils.call(node, "Setup.Configure.Apply")
+    if not application.get_property_value("Success"):
         # Print out all the issues that were found
-        for issue in issues:
-            print(issue.description())
+        print(application.get_property_value("Issues"))
 
-        print("Configuration will not be applied.")
-    else:
-        # Apply the configuration to the Node
-        # Note: This writes multiple options to the Node. If an Error_NodeCommunication 
-        #       exception is thrown, it is possible that some options were successfully 
-        #       applied, while others failed. It is recommended to keep calling 
-        #       applyConfig until no exception is thrown.
-        node.applyConfig(config)
-
-    print("Done.")
+        print("Application failed.")
+print("Done.")
 ```
-
-### Starting Sync Sampling
-
-This code snippet provides the function to start sync sampling:
-
-> Note: The Nodes must already be configured for Sync Sampling before adding to the network, or else Error_InvalidNodeConfig will be thrown.
-
-```
-def startSyncSampling(baseStation, nodes):
-    # Create a SyncSamplingNetwork object, giving it the BaseStation that will be the master BaseStation for the network.
-    network = mscl.SyncSamplingNetwork(baseStation)
-
-    # Add the WirelessNodes to the network.
-    for node in nodes:
-        print("Adding node {0} to the network...".format(node.nodeAddress()), end="")
-        network.addNode(node)
-        print("Done.")
-
-    # Can get information about the network
-    print("Network info:")
-    print("Network OK: {0}".format("TRUE" if network.ok() else "FALSE"))
-    print("Percent of Bandwidth: {0:04.02f}%", network.percentBandwidth())
-    print("Lossless Enabled: {0}".format("TRUE" if network.lossless() else "FALSE"))
-
-    # Apply the network configuration to every node in the network
-    print("Applying network configuration...", end="")
-    network.applyConfiguration()
-    print("Done.")
-
-    # Start all the nodes in the network sampling. The master BaseStation's beacon will be enabled with the system time.
-    print("Starting the network...", end="")
-    network.startSampling()
-    print("Done.")
-```
-
-> Note: If you wish to provide your own start time (not use the system time), pass a mscl::Timestamp object as a second parameter to this function.
-
-> Note: If you do not want to enable a beacon at this time, use the startSampling_noBeacon() function. (The nodes will wait until they hear a beacon to start sampling).
-
-Many other functions are available for the SyncSamplingNetwork:
-
-| Function | Description |
-|----------|-------------|
-| network.lossless() | Enable or disable "lossless" mode for the network (default of enabled). |
-| network.ok() | Check whether the network is "OK" meaning all nodes fit in the network and have communicated successfully. |
-| network.percentBandwidth() | Get the percentage of bandwidth for the entire network. |
-|network.refresh() | Refreshes the entire network. Should be called any time a change is made to the node after it has been added to the network. |
-|network.removeNode() | Remove a node from the network. |
-| network.getNodeNetworkInfo(nodeAddress) | Get network information for an individual node in the network (TDMA address, percent bandwidth, etc.) |
 
 ### Enabling Beacons
+
+Beacons are used to update each node's real time clock, providing node-to-node synchronization.
 
 To enable a beacon:
 
 ```
 # Make sure we can ping the base station
-if not baseStation.ping():
+if not (daq_utils.call(baseStation, "Control.Ping")).get_property_value("Success"):
     print("Failed to ping the Base Station")
 
-if baseStation.features().supportsBeaconStatus():
-    status = baseStation.beaconStatus()
-    print("Beacon current status: Enabled?: {0}".format("TRUE" if status.enabled() else "FALSE"), end="")
-    print(" Time: {0}".format(status.timestamp()))
+if baseStation.get_property_value("Capabilities.SupportsBeaconStatus"):
+    status = daq_utils.call(baseStation, "Control.GetBeaconStatus")
+    print("Beacon current status: Enabled?: {0}".format("TRUE" if status.get_property_value("Enabled") else "FALSE"), end="")
+    print(" Time: {0}".format(status.get_property_value("Timestamp")))
 
 print("Attempting to enable the beacon...")
 
 # Enable the beacon on the Base Station using the PC time
-beaconTime = baseStation.enableBeacon()
+beaconTime = (daq_utils.call(baseStation, "Control.EnableBeacon")).get_property_value("Timestamp")
 
 # If we got here, no exception was thrown, so enableBeacon was successful
 print("Successfully enabled the beacon on the Base Station")
@@ -231,7 +110,7 @@ To disable a beacon:
 
 ```
 # Disable the beacon on the Base Station
-baseStation.disableBeacon()
+daq_utils.call(baseStation, "Control.DisableBeacon")
 
 # If we got here, no exception was thrown, so disableBeacon was successful
 print("Successfully disabled the beacon on the Base Station")
