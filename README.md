@@ -180,8 +180,7 @@ This code snippet will display a list of all currently available devices:
 **C++**
 ```cpp
 for (daq::DeviceInfoPtr deviceInfo : instance.getAvailableDevices()) {
-    std::cout << "Name: " << deviceInfo.getName()
-              << " Connection string: " << deviceInfo.getConnectionString() << "\n";
+    std::cout << "Name: " << deviceInfo.getName() << " Connection string: " << deviceInfo.getConnectionString() << "\n";
 }
 ```
 
@@ -517,17 +516,17 @@ To inspect a type:
 
 **C++**
 ```cpp
-inspector.Describe("MSCL_Wireless_AutoCalCompletionFlag");
+inspector.Describe("AutoCalCompletionFlag");
 ```
 
 **Python**
 ```python
-inspector.describe('MSCL_Wireless_AutoCalCompletionFlag')
+inspector.describe('AutoCalCompletionFlag')
 ```
 
 **C#**
 ```csharp
-inspector.Describe("MSCL_Wireless_AutoCalCompletionFlag");
+inspector.Describe("AutoCalCompletionFlag");
 ```
 
 ### Creating typed values
@@ -553,64 +552,195 @@ var daqTypes = new DaqTypeFactory(instance);
 
 **C++**
 ```cpp
-daq::EnumerationPtr voltage = daqTypes.MakeEnum("MSCL_Wireless_Voltage", "voltage_3000mV");
+daq::EnumerationPtr voltage = daqTypes.MakeEnum("Voltage", "voltage_3000mV");
 ```
 
 **Python**
 ```python
-voltage = daq_types.enum("MSCL_Wireless_Voltage", "voltage_3000mV")
+voltage = daq_types.enum("Voltage", "voltage_3000mV")
 ```
 
 **C#**
 ```csharp
-var voltage = daqTypes.MakeEnum("MSCL_Wireless_Voltage", "voltage_3000mV");
+var voltage = daqTypes.MakeEnum("Voltage", "voltage_3000mV");
 ```
 
 #### Creating a Struct value
 
 **C++**
 ```cpp
-daq::StructPtr cmdInfo = daqTypes.MakeStruct("MSCL_Wireless_ShuntCalCmdInfo",
+daq::StructPtr cmdInfo = daqTypes.MakeStruct("ShuntCalCmdInfo",
 {
     {"UseInternalShunt",  daq::Boolean(true)},
     {"NumActiveGauges",   daq::Integer(1)},
     {"GaugeResistance",   daq::Integer(350)},
     {"ShuntResistance",   daq::Integer(100000)},
     {"GaugeFactor",       daq::Float(2.0)},
-    {"InputRange",        daqTypes.MakeEnum("MSCL_Wireless_InputRange", "range_14_545mV")},
+    {"InputRange",        daqTypes.MakeEnum("InputRange", "range_14_545mV")},
     {"HardwareOffset",    daq::Integer(0)},
-    {"ExcitationVoltage", daqTypes.MakeEnum("MSCL_Wireless_Voltage", "voltage_1500mV")}
+    {"ExcitationVoltage", daqTypes.MakeEnum("Voltage", "voltage_1500mV")}
 });
 ```
 
 **Python**
 ```python
 cmd_info = daq_types.struct(
-    "MSCL_Wireless_ShuntCalCmdInfo",
+    "ShuntCalCmdInfo",
     {
         "UseInternalShunt": True,
         "NumActiveGauges": 1,
         "GaugeResistance": 350,
         "ShuntResistance": 100000,
         "GaugeFactor": 2.0,
-        "InputRange": daq_types.enum("MSCL_Wireless_InputRange", "range_14_545mV"),
+        "InputRange": daq_types.enum("InputRange", "range_14_545mV"),
         "HardwareOffset": 0,
-        "ExcitationVoltage": daq_types.enum("MSCL_Wireless_Voltage", "voltage_1500mV")
+        "ExcitationVoltage": daq_types.enum("Voltage", "voltage_1500mV")
     }
 )
 ```
 
 **C#**
 ```csharp
-var cmdInfo = daqTypes.MakeStruct("MSCL_Wireless_ShuntCalCmdInfo", new Dictionary<string, object>
+var cmdInfo = daqTypes.MakeStruct("ShuntCalCmdInfo", new Dictionary<string, object>
 {
     ["UseInternalShunt"] = true,
     ["NumActiveGauges"] = 1,
     ["GaugeResistance"] = 350,
     ["ShuntResistance"] = 100000,
     ["GaugeFactor"] = 2.0,
-    ["InputRange"] = daqTypes.MakeEnum("MSCL_Wireless_InputRange", "range_14_545mV"),
+    ["InputRange"] = daqTypes.MakeEnum("InputRange", "range_14_545mV"),
     ["HardwareOffset"] = 0,
-    ["ExcitationVoltage"] = daqTypes.MakeEnum("MSCL_Wireless_Voltage", "voltage_1500mV")
+    ["ExcitationVoltage"] = daqTypes.MakeEnum("Voltage", "voltage_1500mV")
 });
 ```
+
+### Using openDAQ containers
+
+#### Structs
+
+To read a field from a struct by name:
+
+**C++**
+```cpp
+daq::StructPtr struct_val = result.asPtr<daq::IStruct>();
+daq::BaseObjectPtr field = struct_val.get("FieldName");
+```
+
+**Python**
+```python
+field = struct_val.FieldName
+```
+
+**C#**
+```csharp
+var field = struct_val.Cast<Struct>()?.Get("FieldName");
+```
+
+To iterate over all fields:
+
+**C++**
+```cpp
+daq::StructPtr struct_val = result.asPtr<daq::IStruct>();
+for (const daq::StringPtr& name : struct_val.getFieldNames()) {
+    std::cout << name << ": " << struct_val.get(name) << "\n";
+}
+```
+
+**Python**
+```python
+for name in struct_val.struct_type.field_names:
+    print(name, getattr(struct_val, name))
+```
+
+**C#**
+```csharp
+var struct_val = result.Cast<Struct>();
+foreach (string name in struct_val.FieldNames)
+    Console.WriteLine($"{name}: {struct_val.Get(name)}");
+```
+
+> **Note:** To see what fields a struct type contains, see [Inspecting types](#inspecting-types).
+
+#### Lists
+
+To access an item by index:
+
+**C++**
+```cpp
+daq::ListPtr<daq::IBaseObject> list = result.asPtr<daq::IList<daq::IBaseObject>>();
+daq::BaseObjectPtr first = list[0];
+```
+
+**Python**
+```python
+first = result[0]
+```
+
+**C#**
+```csharp
+var list = result.Cast<IListObject<BaseObject>>();
+var first = list[0];
+```
+
+To iterate over all items:
+
+**C++**
+```cpp
+daq::ListPtr<daq::IBaseObject> list = result.asPtr<daq::IList<daq::IBaseObject>>();
+for (const daq::BaseObjectPtr& item : list) {
+    std::cout << item << "\n";
+}
+```
+
+**Python**
+```python
+for item in result:
+    print(item)
+```
+
+**C#**
+```csharp
+var list = result.Cast<IListObject<BaseObject>>();
+foreach (var item in list)
+    Console.WriteLine(item);
+```
+
+
+## Troubleshooting
+
+### Listing detected modules
+
+If a device isn't being detected, run this to check whether the module is loaded:
+
+#### C++
+
+```cpp
+for (const daq::ModulePtr& module : instance.getModuleManager().getModules()) {
+    daq::ModuleInfoPtr info = module.getModuleInfo();
+    daq::VersionInfoPtr v = info.getVersionInfo();
+    std::cout << info.getName() << " (" << info.getId() << ") v" << v.getMajor() << "." << v.getMinor() << "." << v.getPatch() << "\n";
+}
+```
+
+#### Python
+
+```python
+for module in instance.module_manager.modules:
+    info = module.module_info
+    v = info.version_info
+    print(f"{info.name} ({info.id}) v{v.major}.{v.minor}.{v.patch}")
+```
+
+#### C#
+
+```csharp
+foreach (var module in instance.ModuleManager.Modules)
+{
+    var info = module.ModuleInfo;
+    var v = info.VersionInfo;
+    Console.WriteLine($"{info.Name} ({info.Id}) v{v.Major}.{v.Minor}.{v.Patch}");
+}
+```
+
+- **Module appears** — the module loaded, but something is preventing device detection
+- **Module missing** — the module itself is not being loaded

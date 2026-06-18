@@ -144,8 +144,47 @@ def _field_type_label(value):
     if isinstance(value, str):
         return 'String'
     if daq.IEnumeration.can_cast_from(value):
-        return f'Enum<{daq.IEnumeration.cast_from(value).enumeration_type.name}>'
-    return type(value).__name__
+        return f'Enumeration[{daq.IEnumeration.cast_from(value).enumeration_type.name}]'
+    try:
+        return f'Struct[{value.struct_type.name}]'
+    except AttributeError:
+        return type(value).__name__
+
+
+def _prop_type_label(obj, prop):
+    vt = prop.value_type
+    if vt == daq.CoreType.ctBool:
+        return 'Bool'
+    if vt == daq.CoreType.ctInt:
+        return 'Int'
+    if vt == daq.CoreType.ctFloat:
+        return 'Float'
+    if vt == daq.CoreType.ctString:
+        return 'String'
+    if vt == daq.CoreType.ctEnumeration:
+        try:
+            value = obj.get_property_value(prop.name)
+            return f'Enumeration[{daq.IEnumeration.cast_from(value).enumeration_type.name}]'
+        except Exception:
+            return 'Enumeration'
+    if vt == daq.CoreType.ctStruct:
+        try:
+            return f'Struct[{obj.get_property_value(prop.name).struct_type.name}]'
+        except Exception:
+            return 'Struct'
+    if vt == daq.CoreType.ctList:
+        try:
+            items = obj.get_property_value(prop.name)
+            first = next(iter(items), None)
+            if first is not None:
+                return f'List<{_field_type_label(first)}>'
+        except Exception:
+            pass
+        return 'List'
+    if vt == daq.CoreType.ctDict:
+        return 'Dict'
+    raw = str(vt).split('CoreType.')[-1]
+    return raw[2:] if raw.startswith('ct') else raw
 
 
 def call(root, path, *args):
@@ -253,8 +292,8 @@ def properties(root, group=None):
     start_prefix = group or ''
 
     return [
-        (prefix or 'None', prop.name, str(prop.value_type).split('CoreType.')[-1])
-        for _, prop, prefix, _ in _depth_first_search(start_obj, start_prefix)
+        (prefix or 'None', prop.name, _prop_type_label(obj, prop))
+        for obj, prop, prefix, _ in _depth_first_search(start_obj, start_prefix)
         if prop.value_type != daq.CoreType.ctObject
     ]
 
