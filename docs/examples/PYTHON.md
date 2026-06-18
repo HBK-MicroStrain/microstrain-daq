@@ -4,7 +4,7 @@ This document provides examples of common operations with wireless devices.
 
 ### Pinging Nodes
 
-A ping is a byte transmitted by the gateway to the node. If the byte is echoed by the node, existing communication is indicated between the node and gateway.
+The ping command is used to check if there is proper communication between the base station and the node.
 
 ```
 result = daq_utils.call(node, "Control.Ping")
@@ -17,7 +17,8 @@ if result.get_property_value('Success'):
     print("Node RSSI: {0}".format(result.get_property_value('NodeRssi')))
 
     # We can talk to the Node, so let's get some more info
-    print("Node Information:")
+    print("\nNode Information:")
+    print("--------------------")
     print("Model Number: {0}".format(node.get_property_value('Advanced.ModelName')))
     print("Serial: {0}".format(node.get_property_value('Advanced.Serial')))
     print("Firmware: {0}\n".format(node.get_property_value('Advanced.FirmwareVersion')))
@@ -26,18 +27,16 @@ else:
 ```
 > **Note: To communicate with a Wireless Node, all the following must be true:**
 >
->    - The Node is powered on, and within range of the BaseStation
->    - The Node is on the same frequency as the BaseStation
+>    - The Node is powered on, and within range of the Base Station
+>    - The Node is on the same frequency as the Base Station
 >    - The Node is in Idle Mode (not sampling, and not sleeping)
->    - The Node is on the same communication protocol as the BaseStation (LXRS vs LXRS+)
+>    - The Node is on the same communication protocol as the Base Station (LXRS vs LXRS+)
 
 
 
 ### Setting Current Configuration Settings
 
 To set current configuration settings for a node:
-
-> Note: This example only changes a small subset of settings. More settings are available. Please reference the documentation for the full list of functions.
 
 ```
 print("\nChanging configuration settings...", end="")
@@ -67,41 +66,91 @@ else:
     #       exception is thrown, it is possible that some options were successfully 
     #       applied, while others failed. It is recommended to keep calling 
     #       Apply until no exception is thrown.
-    application =  daq_utils.call(node, "Setup.Configure.Apply")
+    application = daq_utils.call(node, "Setup.Configure.Apply")
     if not application.get_property_value("Success"):
         # Print out all the issues that were found
         print(application.get_property_value("Issues"))
 
         print("Application failed.")
+
 print("Done.")
 ```
 
+### Starting Sync Sampling
+
+Synchronized Sampling is a sampling mode that automatically coordinates all incoming node data to a particular gateway. It is designed to ensure data arrival and sequence.
+
+This code snippet provides the function to start sync sampling:
+
+> Note: The Nodes must already be configured for Sync Sampling before adding to the network, or else Error_InvalidNodeConfig will be thrown.
+
+```
+# Select nodes
+for node in device.get_channels():
+    print(f"Adding node {node.get_property_value('Advanced.NodeAddress')}")
+
+    # Enable the node for sampling
+    node.set_property_value('Control.Sample.Enabled', True)
+
+    # Add the node to the network
+    add_result = daq_utils.call(device, 'Control.Sample.AddNode', node.get_property_value('Advanced.NodeAddress'))
+    if not add_result.get_property_value('Success'):
+        print(f"Adding node failed: {add_result.get_property_value('Error')}")
+
+# Can get information about the network
+print("Network info:")
+print("Network OK: {0}".format("TRUE" if (device.get_property_value("Control.Sample.isValid")) else "FALSE"))
+print(f"Percent of Bandwidth: {(device.get_property_value("Control.Sample.NetworkBandwidth"))}%")
+print("Lossless Enabled: {0}".format("TRUE" if device.get_property_value("Control.Sample.Lossless") else "FALSE"))
+
+# Start the network once all nodes have been added
+start_result = daq_utils.call(device, 'Control.Sample.ApplyAndStartNetwork')
+print(f"Start network succeeded: {start_result.get_property_value('Success')}")
+```
+
+> Note: If you wish to provide your own start time (not use the system time), pass a mscl::Timestamp object as a second parameter to this function.
+
+> Note: If you do not want to enable a beacon at this time, use the startSampling_noBeacon() function. (The nodes will wait until they hear a beacon to start sampling).
+
+Many other functions are available for the SyncSamplingNetwork:
+
+| Function | Description |
+|----------|-------------|
+| network.lossless() | Enable or disable "lossless" mode for the network (default of enabled). |
+| network.ok() | Check whether the network is "OK" meaning all nodes fit in the network and have communicated successfully. |
+| network.percentBandwidth() | Get the percentage of bandwidth for the entire network. |
+|network.refresh() | Refreshes the entire network. Should be called any time a change is made to the node after it has been added to the network. |
+|network.removeNode() | Remove a node from the network. |
+| network.getNodeNetworkInfo(nodeAddress) | Get network information for an individual node in the network (TDMA address, percent bandwidth, etc.) |
+
 ### Enabling Beacons
 
-Beacons are used to update each node's real time clock, providing node-to-node synchronization.
+The beacon is used to synchronize and start a group of nodes when performing Synchronized Sampling.
 
 To enable a beacon:
 
 ```
 # Make sure we can ping the base station
-if not (daq_utils.call(baseStation, "Control.Ping")).get_property_value("Success"):
+if not (daq_utils.call(base_station, "Control.Ping")).get_property_value("Success"):
     print("Failed to ping the Base Station")
 
-if baseStation.get_property_value("Capabilities.SupportsBeaconStatus"):
-    status = daq_utils.call(baseStation, "Control.GetBeaconStatus")
+if base_station.get_property_value("Capabilities.SupportsBeaconStatus"):
+    status = daq_utils.call(base_station, "Control.GetBeaconStatus")
     print("Beacon current status: Enabled?: {0}".format("TRUE" if status.get_property_value("Enabled") else "FALSE"), end="")
     print(" Time: {0}".format(status.get_property_value("Timestamp")))
 
 print("Attempting to enable the beacon...")
 
 # Enable the beacon on the Base Station using the PC time
-beaconTime = (daq_utils.call(baseStation, "Control.EnableBeacon")).get_property_value("Timestamp")
+beaconTime = (daq_utils.call(base_station, "Control.EnableBeacon")).get_property_value("Timestamp")
+if not (daq_utils.call(base_station, "Control.EnableBeacon")).get_property_value("Success"):
+    print("Failed to enable the beacon")
+else:
+    # If we got here, no exception was thrown, so enableBeacon was successful
+    print("Successfully enabled the beacon on the Base Station")
+    print("Beacon's initial Timestamp: {0}".format(beaconTime))
 
-# If we got here, no exception was thrown, so enableBeacon was successful
-print("Successfully enabled the beacon on the Base Station")
-print("Beacon's initial Timestamp: {0}".format(beaconTime))
-
-print("Beacon is active")
+    print("Beacon is active")
 ```
 
 ### Disabling Beacons
@@ -110,8 +159,11 @@ To disable a beacon:
 
 ```
 # Disable the beacon on the Base Station
-daq_utils.call(baseStation, "Control.DisableBeacon")
+daq_utils.call(base_station, "Control.DisableBeacon")
 
-# If we got here, no exception was thrown, so disableBeacon was successful
-print("Successfully disabled the beacon on the Base Station")
+if not (daq_utils.call(base_station, "Control.DisableBeacon")).get_property_value("Success"):
+    print("Failed to disable the beacon")
+else:
+    # If we got here, disableBeacon was successful
+    print("Successfully disabled the beacon on the Base Station")
 ```
