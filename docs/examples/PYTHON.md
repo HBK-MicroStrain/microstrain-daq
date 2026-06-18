@@ -10,7 +10,7 @@ The ping command is used to check if there is proper communication between the b
 result = daq_utils.call(node, "Control.Ping")
 
 if result.get_property_value('Success'):
-    
+
     # Get some details from the response
     print("Successfully pinged Node {0}".format(node.get_property_value('Advanced.NodeAddress')))
     print("Base Station RSSI: {0}".format(result.get_property_value('BaseRssi')))
@@ -62,9 +62,9 @@ if not verification.get_property_value("Success"):
     print("Configuration will not be applied.")
 else:
     # Apply the configuration to the Node
-    # Note: This writes multiple options to the Node. If an Error_NodeCommunication 
-    #       exception is thrown, it is possible that some options were successfully 
-    #       applied, while others failed. It is recommended to keep calling 
+    # Note: This writes multiple options to the Node. If an Error_NodeCommunication
+    #       exception is thrown, it is possible that some options were successfully
+    #       applied, while others failed. It is recommended to keep calling
     #       Apply until no exception is thrown.
     application = daq_utils.call(node, "Setup.Configure.Apply")
     if not application.get_property_value("Success"):
@@ -82,8 +82,6 @@ Synchronized Sampling is a sampling mode that automatically coordinates all inco
 
 This code snippet provides the function to start sync sampling:
 
-> Note: The Nodes must already be configured for Sync Sampling before adding to the network, or else Error_InvalidNodeConfig will be thrown.
-
 ```
 # Select nodes
 for node in device.get_channels():
@@ -99,29 +97,20 @@ for node in device.get_channels():
 
 # Can get information about the network
 print("Network info:")
-print("Network OK: {0}".format("TRUE" if (device.get_property_value("Control.Sample.isValid")) else "FALSE"))
+print("Network OK: {0}".format(device.get_property_value("Control.Sample.IsValid")))
 print(f"Percent of Bandwidth: {(device.get_property_value("Control.Sample.NetworkBandwidth"))}%")
-print("Lossless Enabled: {0}".format("TRUE" if device.get_property_value("Control.Sample.Lossless") else "FALSE"))
+print("Lossless Enabled: {0}".format(device.get_property_value("Control.Sample.Lossless")))
 
 # Start the network once all nodes have been added
 start_result = daq_utils.call(device, 'Control.Sample.ApplyAndStartNetwork')
 print(f"Start network succeeded: {start_result.get_property_value('Success')}")
 ```
 
-> Note: If you wish to provide your own start time (not use the system time), pass a mscl::Timestamp object as a second parameter to this function.
-
-> Note: If you do not want to enable a beacon at this time, use the startSampling_noBeacon() function. (The nodes will wait until they hear a beacon to start sampling).
-
-Many other functions are available for the SyncSamplingNetwork:
-
-| Function | Description |
-|----------|-------------|
-| network.lossless() | Enable or disable "lossless" mode for the network (default of enabled). |
-| network.ok() | Check whether the network is "OK" meaning all nodes fit in the network and have communicated successfully. |
-| network.percentBandwidth() | Get the percentage of bandwidth for the entire network. |
-|network.refresh() | Refreshes the entire network. Should be called any time a change is made to the node after it has been added to the network. |
-|network.removeNode() | Remove a node from the network. |
-| network.getNodeNetworkInfo(nodeAddress) | Get network information for an individual node in the network (TDMA address, percent bandwidth, etc.) |
+> Note: The Nodes must already be configured for Sync Sampling before adding to the network, or else Error_InvalidNodeConfig will be thrown.
+>
+> If you wish to provide your own start time (instead of using the system time), pass a Timestamp object as a second parameter to this function.
+>
+> If you don't want to enable a beacon at this time, use the `Control.Sample.ApplyAndArmNodes` function. The nodes will wait until they hear a beacon to start sampling.
 
 ### Enabling Beacons
 
