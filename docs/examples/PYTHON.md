@@ -6,7 +6,7 @@ This document provides examples of common operations with wireless devices using
 
 The ping command is used to check if there is proper communication between the base station and the node.
 
-```
+```python
 result = daq_utils.call(node, "Control.Ping")
 
 if result.get_property_value('Success'):
@@ -38,7 +38,7 @@ else:
 
 To set current configuration settings for a node:
 
-```
+```python
 print("\nChanging configuration settings...", end="")
 
 # Set the configuration options that we want to change
@@ -82,7 +82,7 @@ Synchronized Sampling is a sampling mode that automatically coordinates all inco
 
 This code snippet provides the function to start sync sampling:
 
-```
+```python
 # Select nodes
 for node in base_station.get_channels():
     print(f"Adding node {node.get_property_value('Advanced.NodeAddress')}")
@@ -118,7 +118,7 @@ The beacon is used to synchronize and start a group of nodes when performing Syn
 
 To enable a beacon:
 
-```
+```python
 # Make sure we can ping the base station
 if not (daq_utils.call(base_station, "Control.Ping")).get_property_value("Success"):
     print("Failed to ping the Base Station")
@@ -146,7 +146,7 @@ else:
 
 To disable a beacon:
 
-```
+```python
 # Disable the beacon on the Base Station
 daq_utils.call(base_station, "Control.DisableBeacon")
 
