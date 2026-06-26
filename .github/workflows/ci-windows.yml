@@ -30,7 +30,6 @@ jobs:
           -B cpp-build
           -S microstrain-daq-utils/daq_utils/cpp
           -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS="/MP"
 
       - name: Build
         run: cmake --build cpp-build --config Release --parallel
