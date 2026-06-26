@@ -30,3 +30,7 @@ target_include_directories(microstrain_daq_utils PUBLIC
 
 target_link_libraries(microstrain_daq_utils PRIVATE daq::opendaq)
 target_compile_features(microstrain_daq_utils PUBLIC cxx_std_17)
+
+if(MSVC)
+    target_compile_options(microstrain_daq_utils PRIVATE /MP)
+endif()
