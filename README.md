@@ -1,11 +1,11 @@
 # MicroStrain DAQ
 
-Companion tools to enhance working with the MicroStrain Wireless OpenDAQ module:
+| Platform | Build Status |
+| -------- | ------------ |
+| Windows  | [![CI (Windows)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-windows.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-windows.yml) [![CD (Windows)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd-windows.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd-windows.yml) |
+| Linux    | [![CI (Linux)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-linux.yml) [![CD (Linux)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd-linux.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd-linux.yml) |
 
-| Tool                                                   | Supported Languages   |
-| ------------------------------------------------------ | --------------------- |
-| [Library](#library)                                    | C++, C#, Python |
-| [JupyterLab](#interactive-prototyping-tool) | Python        |
+An opinionated library that enhances working with [openDAQ](https://opendaq.com/) modules from [MicroStrain by HBK](https://www.hbkworld.com/en/Campaign/microstrain-by-hbk).
 
 ## Library
 
