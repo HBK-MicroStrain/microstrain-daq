@@ -1,19 +1,15 @@
 # MicroStrain DAQ
 
-Companion tools to enhance working with the MicroStrain Wireless OpenDAQ module:
+| Platform | Build Status |
+| -------- | ------------ |
+| Windows  | [![CI (Windows)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-windows.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-windows.yml) [![CD (Windows)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd-windows.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd-windows.yml) |
+| Linux    | [![CI (Linux)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-linux.yml) [![CD (Linux)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd-linux.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd-linux.yml) |
 
-| Tool                                                   | Supported Languages   |
-| ------------------------------------------------------ | --------------------- |
-| [Library](#library)                                    | C++, C#, Python |
-| [JupyterLab](#interactive-prototyping-tool) | Python        |
+An opinionated library that enhances working with [openDAQ](https://opendaq.com/) modules from [MicroStrain by HBK](https://www.hbkworld.com/en/Campaign/microstrain-by-hbk).
 
-## Library
+## Installation
 
-`daq_utils` is a library that simplifies working with openDAQ through extensions tailored for MicroStrain modules.
-
-### Installation
-
-#### C++
+### C++
 
 Add the library to your project using CMake FetchContent, replacing `<version>` with the desired release tag:
 
@@ -36,7 +32,7 @@ To import the library into your project:
 #include <daq_utils/wireless.h>
 ```
 
-#### Python
+### Python
 
 ```
 pip install microstrain-daq-utils
@@ -48,7 +44,7 @@ To import the library into your project:
 import daq_utils
 ```
 
-#### C#
+### C#
 
 ```
 dotnet add package MicroStrain.DaqUtils
@@ -63,7 +59,8 @@ using Daq.Utils;
 See [Usage](#usage) for examples of how to use the library.
 
 ## JupyterLab
-The [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/) environment comes with Python notebook templates pre-configured for various use cases.
+
+The Python library bindings can be used with [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/), and a separate package provides notebook templates pre-configured for various use cases.
 
 This is ideal for exploration, prototyping, and testing.
 
