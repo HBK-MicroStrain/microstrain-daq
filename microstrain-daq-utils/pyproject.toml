@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "microstrain-daq-utils"
 dynamic = ["version"]
-description = "Python utilities for MicroStrain openDAQ module validation"
+description = "An opinionated library that enhances working with openDAQ modules from MicroStrain by HBK."
 requires-python = ">=3.9"
 dependencies = [
     "opendaq==3.30.3",
@@ -13,6 +13,9 @@ dependencies = [
 
 [project.optional-dependencies]
 jupyter = ["microstrain-daq-jupyter"]
+
+[project.urls]
+Support = "mailto:microstrainsupport@hbkworld.com"
 
 [tool.hatch.version]
 source = "vcs"

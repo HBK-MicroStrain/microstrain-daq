@@ -145,7 +145,14 @@ jobs:
     name: Publish to NuGet.org
     needs: [build-nuget, upload-release]
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
       - name: Download NuGet artifact
         uses: actions/download-artifact@v4
         with:
@@ -153,8 +160,13 @@ jobs:
           path: nuget-dist
 
       - name: Push to NuGet.org
-        run: >
-          dotnet nuget push nuget-dist/*.nupkg
-          --api-key "${{ secrets.NUGET_API_KEY }}"
-          --source https://api.nuget.org/v3/index.json
-          --skip-duplicate
+        run: |
+          OIDC_TOKEN=$(curl -sH "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=nuget.org" | jq -r .value)
+          NUGET_TOKEN=$(curl -sf -X POST https://api.nuget.org/v1/publish/oidc \
+            -H "Content-Type: application/json" \
+            -d "{\"oidcToken\":\"${OIDC_TOKEN}\"}" | jq -r .apiKey)
+          dotnet nuget push nuget-dist/*.nupkg \
+            --api-key "$NUGET_TOKEN" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
