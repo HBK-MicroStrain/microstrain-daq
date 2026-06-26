@@ -83,7 +83,7 @@ void DepthFirstSearch(daq::PropertyObjectPtr root, std::string prefix, Visitor&&
             if (prop.getValueType() == daq::CoreType::ctObject)
             {
                 daq::PropertyObjectPtr sub =
-                    frame.obj.getPropertyValue(daq::String(propName)).asPtr<daq::IPropertyObject>();
+                    frame.obj.getPropertyValue(daq::String(propName)).template asPtr<daq::IPropertyObject>();
                 if (sub.assigned())
                 {
                     subgroups.push_back({std::move(sub), std::move(path)});
