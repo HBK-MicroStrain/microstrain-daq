@@ -1,0 +1,143 @@
+name: CD (Windows)
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+
+jobs:
+  gate:
+    name: Verify publisher
+    runs-on: ubuntu-latest
+    if: github.actor == 'rafarrel'
+    steps:
+      - run: echo "Authorized tag push by ${{ github.actor }}"
+
+  build-cpp:
+    name: Build C++ (Windows)
+    needs: gate
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache openDAQ FetchContent
+        uses: actions/cache@v4
+        with:
+          path: cpp-build/_deps
+          key: opendaq-deps-windows-3.30.3
+
+      - name: Configure
+        run: >
+          cmake
+          -B cpp-build
+          -S microstrain-daq-utils/daq_utils/cpp
+          -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build cpp-build --config Release --parallel
+
+      - name: Package artifact
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME
+          New-Item -ItemType Directory -Path cpp-artifact/include -Force | Out-Null
+          Copy-Item -Recurse -Path microstrain-daq-utils/daq_utils/cpp/include/* -Destination cpp-artifact/include/
+          Get-ChildItem -Path cpp-build/Release -Filter "microstrain_daq_utils*" -ErrorAction SilentlyContinue |
+            Copy-Item -Destination cpp-artifact/ -Force
+          Compress-Archive -Path cpp-artifact/* -DestinationPath "microstrain-daq-utils-cpp-windows-x64-${version}.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpp-windows
+          path: microstrain-daq-utils-cpp-windows-x64-*.zip
+
+  build-nuget:
+    name: Build NuGet package
+    needs: gate
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Pack
+        run: >
+          dotnet pack
+          microstrain-daq-utils/daq_utils/csharp/DaqUtils.csproj
+          --configuration Release
+          --output nuget-output
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: nuget-output/*.nupkg
+
+  upload-release:
+    name: Upload Windows artifact to release
+    needs: build-cpp
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download C++ artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cpp-windows
+          path: release-assets
+
+      # Waits for the Linux CD pipeline to create the release first since it owns
+      # changelog generation. Falls back to creating a minimal release after 15 min.
+      - name: Upload to GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="$GITHUB_REF_NAME"
+          MAX_WAIT=900
+          INTERVAL=20
+          ELAPSED=0
+
+          until gh release view "$VERSION" --repo "${{ github.repository }}" > /dev/null 2>&1; do
+            if [ $ELAPSED -ge $MAX_WAIT ]; then
+              echo "Timed out waiting for Linux CD to create the release. Creating minimal release."
+              gh release create "$VERSION" release-assets/*.zip \
+                --title "Release $VERSION" \
+                --repo "${{ github.repository }}"
+              exit 0
+            fi
+            echo "Waiting for release... (${ELAPSED}s / ${MAX_WAIT}s)"
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+
+          gh release upload "$VERSION" release-assets/*.zip \
+            --repo "${{ github.repository }}" \
+            --clobber
+
+  publish-nuget:
+    name: Publish to NuGet.org
+    needs: [build-nuget, upload-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download NuGet artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-package
+          path: nuget-dist
+
+      - name: Push to NuGet.org
+        run: >
+          dotnet nuget push nuget-dist/*.nupkg
+          --api-key "${{ secrets.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
