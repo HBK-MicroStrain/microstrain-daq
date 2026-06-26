@@ -61,7 +61,7 @@ jobs:
         run: |
           curl -L -o opendaq.net.nupkg \
             "https://github.com/openDAQ/openDAQ/releases/download/v3.30.3/opendaq.net.3.30.3.23.nupkg"
-          unzip opendaq.net.nupkg -d microstrain-daq-utils/daq_utils/csharp/opendaq-net
+          unzip -o opendaq.net.nupkg -d microstrain-daq-utils/daq_utils/csharp/opendaq-net
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
