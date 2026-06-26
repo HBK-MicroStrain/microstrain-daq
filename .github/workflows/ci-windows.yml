@@ -22,7 +22,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: cpp-build
-          key: opendaq-deps-windows-3.30.3-v1
+          key: opendaq-deps-windows-3.30.3-v2
 
       - name: Configure
         run: >
@@ -30,7 +30,6 @@ jobs:
           -B cpp-build
           -S microstrain-daq-utils/daq_utils/cpp
           -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS="/MP"
 
       - name: Build
         run: cmake --build cpp-build --config Release --parallel
