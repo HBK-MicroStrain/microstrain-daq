@@ -46,7 +46,7 @@ std::string FieldTypeLabel(const daq::BaseObjectPtr& value)
     if (ct == daq::CoreType::ctEnumeration)
     {
         daq::EnumerationPtr e = value.asPtr<daq::IEnumeration>();
-        return "Enum<" + std::string(e.getEnumerationType().getTypeName()) + ">";
+        return "Enum<" + std::string(e.getEnumerationType().getName()) + ">";
     }
     return CoreTypeToString(ct);
 }
