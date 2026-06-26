@@ -163,9 +163,16 @@ jobs:
         run: |
           OIDC_TOKEN=$(curl -sH "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=nuget.org" | jq -r .value)
-          NUGET_TOKEN=$(curl -sf -X POST https://api.nuget.org/v1/publish/oidc \
+          echo "OIDC token length: ${#OIDC_TOKEN}"
+          EXCHANGE_RESPONSE=$(curl -s -X POST https://api.nuget.org/v1/publish/oidc \
             -H "Content-Type: application/json" \
-            -d "{\"oidcToken\":\"${OIDC_TOKEN}\"}" | jq -r .apiKey)
+            -d "{\"oidcToken\":\"${OIDC_TOKEN}\"}")
+          echo "NuGet OIDC response: $EXCHANGE_RESPONSE"
+          NUGET_TOKEN=$(echo "$EXCHANGE_RESPONSE" | jq -r .apiKey)
+          if [ -z "$NUGET_TOKEN" ] || [ "$NUGET_TOKEN" = "null" ]; then
+            echo "Failed to obtain NuGet API key from OIDC exchange"
+            exit 1
+          fi
           dotnet nuget push nuget-dist/*.nupkg \
             --api-key "$NUGET_TOKEN" \
             --source https://api.nuget.org/v3/index.json \
