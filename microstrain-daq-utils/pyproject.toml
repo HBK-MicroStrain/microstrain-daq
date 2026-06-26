@@ -14,8 +14,9 @@ dependencies = [
 [project.optional-dependencies]
 jupyter = ["microstrain-daq-jupyter"]
 
-[project.urls]
-Support = "mailto:microstrainsupport@hbkworld.com"
+[[project.maintainers]]
+name = "MicroStrain by HBK"
+email = "microstrainsupport@hbkworld.com"
 
 [tool.hatch.version]
 source = "vcs"

@@ -12,8 +12,9 @@ dependencies = [
     "jupyterlab-templates>=0.5",
 ]
 
-[project.urls]
-Support = "mailto:microstrainsupport@hbkworld.com"
+[[project.maintainers]]
+name = "MicroStrain by HBK"
+email = "microstrainsupport@hbkworld.com"
 
 [tool.hatch.version]
 source = "vcs"
