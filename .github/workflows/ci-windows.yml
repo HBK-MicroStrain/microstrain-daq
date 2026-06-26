@@ -43,6 +43,23 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Cache openDAQ.Net
+        uses: actions/cache@v4
+        id: cache-opendaq-net
+        with:
+          path: microstrain-daq-utils/daq_utils/csharp/opendaq-net
+          key: opendaq-net-3.30.3.23
+
+      - name: Download openDAQ.Net
+        if: steps.cache-opendaq-net.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest `
+            -Uri "https://github.com/openDAQ/openDAQ/releases/download/v3.30.3/opendaq.net.3.30.3.23.nupkg" `
+            -OutFile opendaq.net.nupkg
+          New-Item -ItemType Directory -Path microstrain-daq-utils/daq_utils/csharp/opendaq-net -Force | Out-Null
+          Expand-Archive -Path opendaq.net.nupkg -DestinationPath microstrain-daq-utils/daq_utils/csharp/opendaq-net -Force
+
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
