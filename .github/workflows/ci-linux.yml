@@ -22,12 +22,12 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y ninja-build mono-complete
 
       # openDAQ is cloned and built from source via FetchContent on first run (~45 min).
-      # The _deps directory is cached so subsequent runs reuse the compiled openDAQ.
+      # The full build directory is cached so subsequent runs skip recompiling openDAQ.
       - name: Cache openDAQ FetchContent
         uses: actions/cache@v4
         with:
-          path: cpp-build/_deps
-          key: opendaq-deps-linux-3.30.3
+          path: cpp-build
+          key: opendaq-deps-linux-3.30.3-v1
 
       - name: Configure
         run: >
