@@ -259,22 +259,16 @@ jobs:
           name: nuget-package
           path: nuget-dist
 
+      - name: NuGet login
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: microstrain-by-hbk
+
       - name: Push to NuGet.org
         run: |
-          OIDC_TOKEN=$(curl -sH "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=nuget.org" | jq -r .value)
-          echo "OIDC token length: ${#OIDC_TOKEN}"
-          EXCHANGE_RESPONSE=$(curl -s -X POST https://api.nuget.org/v1/publish/oidc \
-            -H "Content-Type: application/json" \
-            -d "{\"oidcToken\":\"${OIDC_TOKEN}\"}")
-          echo "NuGet OIDC response: $EXCHANGE_RESPONSE"
-          NUGET_TOKEN=$(echo "$EXCHANGE_RESPONSE" | jq -r .apiKey)
-          if [ -z "$NUGET_TOKEN" ] || [ "$NUGET_TOKEN" = "null" ]; then
-            echo "Failed to obtain NuGet API key from OIDC exchange"
-            exit 1
-          fi
           dotnet nuget push nuget-dist/*.nupkg \
-            --api-key "$NUGET_TOKEN" \
+            --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
 
