@@ -81,6 +81,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ env.RELEASE_VERSION }}
           fetch-depth: 0
 
       - name: Cache openDAQ.Net
@@ -123,6 +124,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ env.RELEASE_VERSION }}
           fetch-depth: 0
 
       - name: Setup Python 3.11
