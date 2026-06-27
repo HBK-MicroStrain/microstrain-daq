@@ -4,6 +4,14 @@ on:
   push:
     tags:
       - 'v[0-9]*.[0-9]*.[0-9]*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tag to publish (e.g. v1.0.0)'
+        required: true
+
+env:
+  RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name }}
 
 jobs:
   gate:
@@ -26,7 +34,7 @@ jobs:
       - name: Package artifact
         shell: pwsh
         run: |
-          $version = $env:GITHUB_REF_NAME
+          $version = $env:RELEASE_VERSION
           New-Item -ItemType Directory -Path cpp-artifact/include -Force | Out-Null
           Copy-Item -Recurse -Path microstrain-daq-utils/daq_utils/cpp/include/* -Destination cpp-artifact/include/
           Get-ChildItem -Path cpp-build/Release -Filter "microstrain_daq_utils*" -ErrorAction SilentlyContinue |
@@ -53,7 +61,7 @@ jobs:
 
       - name: Package artifact
         run: |
-          VERSION="$GITHUB_REF_NAME"
+          VERSION="$RELEASE_VERSION"
           mkdir -p cpp-artifact/include
           cp -r microstrain-daq-utils/daq_utils/cpp/include/* cpp-artifact/include/
           find cpp-build -name "*microstrain_daq_utils*" -type f | xargs -I{} cp {} cpp-artifact/
@@ -131,7 +139,7 @@ jobs:
       # since MinVer handles SemVer pre-release suffixes natively.
       - name: Normalize tag to PEP 440
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${RELEASE_VERSION#v}"
           if [[ "$VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-([a-zA-Z]+)\.?([0-9]*)$ ]]; then
             BASE="${BASH_REMATCH[1]}"
             TYPE="${BASH_REMATCH[2],,}"
@@ -146,7 +154,7 @@ jobs:
           else
             PEP_VERSION="$VERSION"
           fi
-          echo "Tag ${GITHUB_REF_NAME} -> PEP 440 ${PEP_VERSION}"
+          echo "Tag ${RELEASE_VERSION} -> PEP 440 ${PEP_VERSION}"
           echo "SETUPTOOLS_SCM_PRETEND_VERSION=${PEP_VERSION}" >> $GITHUB_ENV
 
       - name: Build microstrain-daq-utils
@@ -204,7 +212,7 @@ jobs:
       - name: Detect prerelease
         id: prerelease
         run: |
-          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+          if [[ "$RELEASE_VERSION" == *-* ]]; then
             echo "value=true" >> $GITHUB_OUTPUT
           else
             echo "value=false" >> $GITHUB_OUTPUT
@@ -212,7 +220,7 @@ jobs:
 
       - name: Build release body
         run: |
-          PKG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION="${RELEASE_VERSION#v}"
           {
             cat CHANGES.md
             echo ""
@@ -235,6 +243,7 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.RELEASE_VERSION }}
           body_path: release-body.md
           prerelease: ${{ steps.prerelease.outputs.value }}
           files: |
