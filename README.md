@@ -1,9 +1,8 @@
 # MicroStrain DAQ
 
-| Platform | Build Status |
-| -------- | ------------ |
-| Windows  | [![CI (Windows)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-windows.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-windows.yml) [![CD (Windows)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd-windows.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd-windows.yml) |
-| Linux    | [![CI (Linux)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-linux.yml) [![CD (Linux)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd-linux.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd-linux.yml) |
+![platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-informational) ![Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue)
+
+[![CI C++ (Windows)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-cpp-windows.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-cpp-windows.yml) [![CI C++ (Linux)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-cpp-linux.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-cpp-linux.yml) [![CI C#](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-csharp.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-csharp.yml) [![CD](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd.yml)
 
 An opinionated library that enhances working with [openDAQ](https://opendaq.com/) modules from [MicroStrain by HBK](https://www.hbkworld.com/en/Campaign/microstrain-by-hbk).
 
