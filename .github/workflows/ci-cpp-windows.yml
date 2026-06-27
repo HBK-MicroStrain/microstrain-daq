@@ -15,4 +15,7 @@ jobs:
     name: Build C++ (Windows)
     runs-on: windows-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/build-cpp-windows

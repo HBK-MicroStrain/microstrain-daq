@@ -4,11 +4,6 @@ description: Checkout, install tools, restore cache, configure, and build the C+
 runs:
   using: composite
   steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
     - name: Install build tools
       shell: bash
       run: sudo apt-get update && sudo apt-get install -y ninja-build mono-complete

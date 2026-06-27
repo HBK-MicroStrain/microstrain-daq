@@ -17,4 +17,7 @@ jobs:
     # RTGen code generation tool requires mono at build time.
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/build-cpp-linux
