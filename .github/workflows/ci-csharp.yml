@@ -1,4 +1,4 @@
-name: CI (Linux)
+name: CI C#
 
 on:
   push:
@@ -11,41 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-cpp:
-    name: Build C++ (Linux)
-    # Pinned to 22.04 — Ubuntu 24.04 dropped Mono from its apt repos and openDAQ's
-    # RTGen code generation tool requires mono at build time.
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install build tools
-        run: sudo apt-get update && sudo apt-get install -y ninja-build mono-complete
-
-      # openDAQ is cloned and built from source via FetchContent on first run (~45 min).
-      # The full build directory is cached so subsequent runs skip recompiling openDAQ.
-      - name: Cache openDAQ FetchContent
-        uses: actions/cache@v4
-        with:
-          path: cpp-build
-          key: opendaq-deps-linux-3.30.3-v1
-
-      - name: Configure
-        run: >
-          cmake
-          -B cpp-build
-          -S microstrain-daq-utils/daq_utils/cpp
-          -DCMAKE_BUILD_TYPE=Release
-          -G Ninja
-
-      - name: Build
-        run: cmake --build cpp-build --parallel
-
   build-csharp:
-    name: Build C# (Linux)
+    name: Build C#
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

@@ -1,0 +1,18 @@
+name: CI C++ (Windows)
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-cpp:
+    name: Build C++ (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: ./.github/actions/build-cpp-windows

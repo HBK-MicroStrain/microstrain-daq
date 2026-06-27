@@ -1,4 +1,4 @@
-name: CD (Linux)
+name: CD
 
 on:
   push:
@@ -13,37 +13,37 @@ jobs:
     steps:
       - run: echo "Authorized tag push by ${{ github.actor }}"
 
-  build-cpp:
+  build-cpp-windows:
+    name: Build C++ (Windows)
+    needs: gate
+    runs-on: windows-latest
+    steps:
+      - uses: ./.github/actions/build-cpp-windows
+
+      - name: Package artifact
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME
+          New-Item -ItemType Directory -Path cpp-artifact/include -Force | Out-Null
+          Copy-Item -Recurse -Path microstrain-daq-utils/daq_utils/cpp/include/* -Destination cpp-artifact/include/
+          Get-ChildItem -Path cpp-build/Release -Filter "microstrain_daq_utils*" -ErrorAction SilentlyContinue |
+            Copy-Item -Destination cpp-artifact/ -Force
+          Compress-Archive -Path cpp-artifact/* -DestinationPath "microstrain-daq-utils-cpp-windows-x64-${version}.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpp-windows
+          path: microstrain-daq-utils-cpp-windows-x64-*.zip
+
+  build-cpp-linux:
     name: Build C++ (Linux)
     needs: gate
     # Pinned to 22.04 — Ubuntu 24.04 dropped Mono from its apt repos and openDAQ's
     # RTGen code generation tool requires mono at build time.
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install build tools
-        run: sudo apt-get update && sudo apt-get install -y ninja-build mono-complete
-
-      - name: Cache openDAQ FetchContent
-        uses: actions/cache@v4
-        with:
-          path: cpp-build
-          key: opendaq-deps-linux-3.30.3-v1
-
-      - name: Configure
-        run: >
-          cmake
-          -B cpp-build
-          -S microstrain-daq-utils/daq_utils/cpp
-          -DCMAKE_BUILD_TYPE=Release
-          -G Ninja
-
-      - name: Build
-        run: cmake --build cpp-build --parallel
+      - uses: ./.github/actions/build-cpp-linux
 
       - name: Package artifact
         run: |
@@ -58,6 +58,48 @@ jobs:
         with:
           name: cpp-linux
           path: microstrain-daq-utils-cpp-linux-x64-*.tar.gz
+
+  build-nuget:
+    name: Build NuGet package
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache openDAQ.Net
+        uses: actions/cache@v4
+        id: cache-opendaq-net
+        with:
+          path: microstrain-daq-utils/daq_utils/csharp/opendaq-net
+          key: opendaq-net-3.30.3.23
+
+      - name: Download openDAQ.Net
+        if: steps.cache-opendaq-net.outputs.cache-hit != 'true'
+        run: |
+          curl -L -o opendaq.net.nupkg \
+            "https://github.com/openDAQ/openDAQ/releases/download/v3.30.3/opendaq.net.3.30.3.23.nupkg"
+          unzip -o opendaq.net.nupkg -d microstrain-daq-utils/daq_utils/csharp/opendaq-net
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Pack
+        run: >
+          dotnet pack
+          microstrain-daq-utils/daq_utils/csharp/DaqUtils.csproj
+          --configuration Release
+          --output nuget-output
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: nuget-output/*.nupkg
 
   build-python:
     name: Build Python packages
@@ -123,7 +165,7 @@ jobs:
 
   create-release:
     name: Create GitHub release
-    needs: build-cpp
+    needs: [build-cpp-windows, build-cpp-linux, build-nuget, build-python]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -133,10 +175,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download C++ artifact
+      - name: Download C++ Linux artifact
         uses: actions/download-artifact@v4
         with:
           name: cpp-linux
+          path: release-assets
+
+      - name: Download C++ Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cpp-windows
           path: release-assets
 
       - name: Generate changelog
@@ -183,7 +231,46 @@ jobs:
         with:
           body_path: release-body.md
           prerelease: ${{ steps.prerelease.outputs.value }}
-          files: release-assets/*.tar.gz
+          files: |
+            release-assets/*.tar.gz
+            release-assets/*.zip
+
+  publish-nuget:
+    name: Publish to NuGet.org
+    needs: [build-nuget, create-release]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Download NuGet artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-package
+          path: nuget-dist
+
+      - name: Push to NuGet.org
+        run: |
+          OIDC_TOKEN=$(curl -sH "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=nuget.org" | jq -r .value)
+          echo "OIDC token length: ${#OIDC_TOKEN}"
+          EXCHANGE_RESPONSE=$(curl -s -X POST https://api.nuget.org/v1/publish/oidc \
+            -H "Content-Type: application/json" \
+            -d "{\"oidcToken\":\"${OIDC_TOKEN}\"}")
+          echo "NuGet OIDC response: $EXCHANGE_RESPONSE"
+          NUGET_TOKEN=$(echo "$EXCHANGE_RESPONSE" | jq -r .apiKey)
+          if [ -z "$NUGET_TOKEN" ] || [ "$NUGET_TOKEN" = "null" ]; then
+            echo "Failed to obtain NuGet API key from OIDC exchange"
+            exit 1
+          fi
+          dotnet nuget push nuget-dist/*.nupkg \
+            --api-key "$NUGET_TOKEN" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
 
   publish-daq-utils:
     name: Publish microstrain-daq-utils to PyPI
