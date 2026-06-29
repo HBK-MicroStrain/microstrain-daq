@@ -34,29 +34,31 @@ else:
 
 ### Setting to Idle
 
-When in idle state, nodes can be discovered automatically and configured.
+The **Set to Idle** command is used to put a Node that is sampling, or sleeping, back into the Idle Mode so that it may be communicated with.
 
 ```python
-# Call the set to idle function and get the resulting SetToIdleResult object
-# Note: This starts the set to idle node command, which is an ongoing operation. The SetToIdleResult should be queried for progress.
-status = daq_utils.call(node, "Control.SetToIdle", 1000)
+# The integer argument here is the command timeout in milliseconds
+result = daq_utils.call(node, "Control.SetToIdle", 3000)
 
 print("Setting Node to Idle")
 
 # Using the SetToIdleResult object, check if the Set to Idle operation is complete.
-while not status.get_property_value("Complete"):
-    print(".", end="")
-
-# At this point, the Set to Idle operation has completed
+for i in range(NUM_CHECKS):
+    success = result.get_property_value('Success')                                        
+    status = result.get_property_value('Status')                                          
+    print(f"Status: [Success={success}, Status={status}]") 
+                          
+    if success:                                                                           
+        break
 
 # Check the result of the Set to Idle operation
-result = status.get_property_value('Status')
+final_status = status.get_property_value('Status')
 
 # Completed successfully
-if result == daq_types.enum("SetToIdleResult", "setToIdleResult_success")
+if final_status == daq_types.enum("SetToIdleResult", "setToIdleResult_success"):
     print("Successfully set to idle!")
 # Canceled by the user
-elif result == daq_types.enum("SetToIdleResult", "setToIdleResult_canceled)
+elif final_status == daq_types.enum("SetToIdleResult", "setToIdleResult_canceled"):
     # Canceled by the user
     print("Set to Idle was canceled!")
 # Failed to perform the operation
