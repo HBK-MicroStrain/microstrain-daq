@@ -32,6 +32,40 @@ else:
 >    - The Node is in Idle Mode (not sampling, and not sleeping)
 >    - The Node is on the same communication protocol as the Base Station (LXRS vs LXRS+)
 
+### Setting to Idle
+
+The **Set to Idle** command is used to put a Node that is sampling, or sleeping, back into the Idle Mode so that it may be communicated with.
+
+```python
+# The integer argument here is the command timeout in milliseconds
+result = daq_utils.call(node, "Control.SetToIdle", 3000)
+
+print("Setting Node to Idle")
+
+# Using the SetToIdleResult object, check if the Set to Idle operation is complete.
+for i in range(NUM_CHECKS):
+    success = result.get_property_value('Success')                                        
+    status = result.get_property_value('Status')                                          
+    print(f"Status: [Success={success}, Status={status}]") 
+                          
+    if success:                                                                           
+        break
+
+# Check the result of the Set to Idle operation
+final_status = status.get_property_value('Status')
+
+# Completed successfully
+if final_status == daq_types.enum("SetToIdleResult", "setToIdleResult_success"):
+    print("Successfully set to idle!")
+# Canceled by the user
+elif final_status == daq_types.enum("SetToIdleResult", "setToIdleResult_canceled"):
+    # Canceled by the user
+    print("Set to Idle was canceled!")
+# Failed to perform the operation
+else:
+    print("Set to Idle has failed!")
+```
+
 ### Getting Current Configuration Settings
 
 Configuration indicates how nodes are set up for data acquisition. It includes settings such as sampling mode/rate, offsets, hardware gain, etc.
