@@ -32,7 +32,48 @@ else:
 >    - The Node is in Idle Mode (not sampling, and not sleeping)
 >    - The Node is on the same communication protocol as the Base Station (LXRS vs LXRS+)
 
+### Getting Current Configuration Settings
 
+Configuration indicates how nodes are set up for data acquisition. It includes settings such as sampling mode/rate, offsets, hardware gain, etc.
+
+To read current configuration settings on the node:
+
+```python
+print("Current Configuration Settings")
+
+# Read some of the current configuration settings on the node
+print("# of Triggers: {0}".format(node.get_property_value('Setup.DataManagement.NumDatalogSessions')))
+print("User Inactivity Timeout: {0} seconds".format(node.get_property_value('Setup.Configure.Power.InactivityTimeout')))
+print("Total active channels: {0}".format(node.get_property_value('Control.Sample.ActiveChannels')))
+print("# of sweeps: {0}".format(node.get_property_value('Control.Sample.NumSweeps')))
+```
+
+If a configuration function requires a ChannelMask parameter, this indicates that the option may affect one or more channels on the Node. You can either: 
+
+- Provide the channel mask when asking for the configuration (if known beforehand)
+- Programmatically determine the mask for each setting
+
+#### Programmatically Determining The Mask For Each Setting
+
+```python
+# Get the ChannelGroups that the node supports
+chGroups = daq_utils.call(node, "Capabilities.ChannelGroups")
+
+# Iterate over each channel group
+for groups in chGroups.get_property_value('Result'):
+
+    # Iterate over each setting for this group
+    for settings in groups.Settings:
+        # If the group contains the linear equation setting
+        if settings == daq_types.enum("ChannelGroupSetting", "chSetting_linearEquation"):
+            # We can now pass the channel mask (group.channels()) for this group to the node.getLinearEquation function.
+            # Note: once this channel mask is known for a specific node (+ fw version), it should never change
+            le = daq_utils.call(node, "Setup.Configure.Calibration.GetLinearEquation", groups.Mask)
+
+            print("Linear Equation for: {0}".format(groups.Name))
+            print("Slope: {0:06.3f}".format(le.get_property_value("Slope")))
+            print("Offset: {0:06.3f}".format(le.get_property_value("Offset")))
+```
 
 ### Setting Current Configuration Settings
 
