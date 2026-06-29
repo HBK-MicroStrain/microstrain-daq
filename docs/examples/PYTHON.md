@@ -48,7 +48,7 @@ print("Total active channels: {0}".format(node.get_property_value('Control.Sampl
 print("# of sweeps: {0}".format(node.get_property_value('Control.Sample.NumSweeps')))
 ```
 
-If a configuration function requires a ChannelMask parameter, this indicates that the option may affect one or more channels on the Node. You can either: 
+If a configuration function requires a channel mask parameter, this indicates that the option may affect one or more channels on the Node. You can either: 
 
 - Provide the channel mask when asking for the configuration (if known beforehand)
 - Programmatically determine the mask for each setting
@@ -56,19 +56,16 @@ If a configuration function requires a ChannelMask parameter, this indicates tha
 #### Programmatically Determining The Mask For Each Setting
 
 ```python
-# Get the ChannelGroups that the node supports
 chGroups = daq_utils.call(node, "Capabilities.ChannelGroups")
 
-# Iterate over each channel group
 for groups in chGroups.get_property_value('Result'):
 
-    # Iterate over each setting for this group
     for settings in groups.Settings:
         # If the group contains the linear equation setting
         if settings == daq_types.enum("ChannelGroupSetting", "chSetting_linearEquation"):
-            # We can now pass the channel mask (group.channels()) for this group to the node.getLinearEquation function.
+            # We can now pass the channel mask for this group to the function.
             # Note: once this channel mask is known for a specific node (+ fw version), it should never change
-            le = daq_utils.call(node, "Setup.Configure.Calibration.GetLinearEquation", groups.Mask)
+            eq = daq_utils.call(node, "Setup.Configure.Calibration.GetLinearEquation", groups.Mask)
 
             print("Linear Equation for: {0}".format(groups.Name))
             print("Slope: {0:06.3f}".format(le.get_property_value("Slope")))
