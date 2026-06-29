@@ -1,0 +1,50 @@
+name: CI C#
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-csharp:
+    name: Build C#
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache openDAQ.Net
+        uses: actions/cache@v4
+        id: cache-opendaq-net
+        with:
+          path: microstrain-daq-utils/daq_utils/csharp/opendaq-net
+          key: opendaq-net-3.30.3.23
+
+      - name: Download openDAQ.Net
+        if: steps.cache-opendaq-net.outputs.cache-hit != 'true'
+        run: |
+          curl -L -o opendaq.net.nupkg \
+            "https://github.com/openDAQ/openDAQ/releases/download/v3.30.3/opendaq.net.3.30.3.23.nupkg"
+          unzip -o opendaq.net.nupkg -d microstrain-daq-utils/daq_utils/csharp/opendaq-net
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore microstrain-daq-utils/daq_utils/csharp/DaqUtils.csproj
+
+      - name: Build
+        run: >
+          dotnet build
+          microstrain-daq-utils/daq_utils/csharp/DaqUtils.csproj
+          --configuration Release
+          --no-restore

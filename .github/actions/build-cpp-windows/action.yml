@@ -1,0 +1,23 @@
+name: Build C++ (Windows)
+description: Checkout, restore cache, configure, and build the C++ library on Windows.
+
+runs:
+  using: composite
+  steps:
+    - name: Cache openDAQ FetchContent
+      uses: actions/cache@v4
+      with:
+        path: cpp-build
+        key: opendaq-deps-windows-3.30.3-v3
+
+    - name: Configure
+      shell: pwsh
+      run: >
+        cmake
+        -B cpp-build
+        -S microstrain-daq-utils/daq_utils/cpp
+        -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      shell: pwsh
+      run: cmake --build cpp-build --config Release --parallel

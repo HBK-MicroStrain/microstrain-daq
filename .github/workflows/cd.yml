@@ -1,0 +1,324 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tag to publish (e.g. v1.0.0)'
+        required: true
+
+env:
+  RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name }}
+
+jobs:
+  gate:
+    name: Verify publisher
+    runs-on: ubuntu-latest
+    if: github.actor == 'rafarrel'
+    steps:
+      - run: echo "Authorized tag push by ${{ github.actor }}"
+
+  build-cpp-windows:
+    name: Build C++ (Windows)
+    needs: gate
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/build-cpp-windows
+
+      - name: Package artifact
+        shell: pwsh
+        run: |
+          $version = $env:RELEASE_VERSION
+          New-Item -ItemType Directory -Path cpp-artifact/include -Force | Out-Null
+          Copy-Item -Recurse -Path microstrain-daq-utils/daq_utils/cpp/include/* -Destination cpp-artifact/include/
+          Get-ChildItem -Path cpp-build/Release -Filter "microstrain_daq_utils*" -ErrorAction SilentlyContinue |
+            Copy-Item -Destination cpp-artifact/ -Force
+          Compress-Archive -Path cpp-artifact/* -DestinationPath "microstrain-daq-utils-cpp-windows-x64-${version}.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpp-windows
+          path: microstrain-daq-utils-cpp-windows-x64-*.zip
+
+  build-cpp-linux:
+    name: Build C++ (Linux)
+    needs: gate
+    # Pinned to 22.04 — Ubuntu 24.04 dropped Mono from its apt repos and openDAQ's
+    # RTGen code generation tool requires mono at build time.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/build-cpp-linux
+
+      - name: Package artifact
+        run: |
+          VERSION="$RELEASE_VERSION"
+          mkdir -p cpp-artifact/include
+          cp -r microstrain-daq-utils/daq_utils/cpp/include/* cpp-artifact/include/
+          find cpp-build -name "*microstrain_daq_utils*" -type f | xargs -I{} cp {} cpp-artifact/
+          tar -czf "microstrain-daq-utils-cpp-linux-x64-${VERSION}.tar.gz" -C cpp-artifact .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpp-linux
+          path: microstrain-daq-utils-cpp-linux-x64-*.tar.gz
+
+  build-nuget:
+    name: Build NuGet package
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_VERSION }}
+          fetch-depth: 0
+
+      - name: Cache openDAQ.Net
+        uses: actions/cache@v4
+        id: cache-opendaq-net
+        with:
+          path: microstrain-daq-utils/daq_utils/csharp/opendaq-net
+          key: opendaq-net-3.30.3.23
+
+      - name: Download openDAQ.Net
+        if: steps.cache-opendaq-net.outputs.cache-hit != 'true'
+        run: |
+          curl -L -o opendaq.net.nupkg \
+            "https://github.com/openDAQ/openDAQ/releases/download/v3.30.3/opendaq.net.3.30.3.23.nupkg"
+          unzip -o opendaq.net.nupkg -d microstrain-daq-utils/daq_utils/csharp/opendaq-net
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Pack
+        run: >
+          dotnet pack
+          microstrain-daq-utils/daq_utils/csharp/DaqUtils.csproj
+          --configuration Release
+          --output nuget-output
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: nuget-output/*.nupkg
+
+  build-python:
+    name: Build Python packages
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_VERSION }}
+          fetch-depth: 0
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Hatch
+        run: pip install hatch
+
+      # Converts SemVer pre-release tags to PEP 440 format so hatch-vcs produces
+      # a valid PyPI version. e.g. v0.8.0-alpha.1 -> 0.8.0a1, v0.8.0-rc.2 -> 0.8.0rc2.
+      # Stable tags (v1.0.0) pass through unchanged. NuGet does not need this step
+      # since MinVer handles SemVer pre-release suffixes natively.
+      - name: Normalize tag to PEP 440
+        run: |
+          VERSION="${RELEASE_VERSION#v}"
+          if [[ "$VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-([a-zA-Z]+)\.?([0-9]*)$ ]]; then
+            BASE="${BASH_REMATCH[1]}"
+            TYPE="${BASH_REMATCH[2],,}"
+            NUM="${BASH_REMATCH[3]:-0}"
+            case "$TYPE" in
+              alpha) SHORT="a"  ;;
+              beta)  SHORT="b"  ;;
+              rc)    SHORT="rc" ;;
+              *)     SHORT="a"  ;;
+            esac
+            PEP_VERSION="${BASE}${SHORT}${NUM}"
+          else
+            PEP_VERSION="$VERSION"
+          fi
+          echo "Tag ${RELEASE_VERSION} -> PEP 440 ${PEP_VERSION}"
+          echo "SETUPTOOLS_SCM_PRETEND_VERSION=${PEP_VERSION}" >> $GITHUB_ENV
+
+      - name: Build microstrain-daq-utils
+        working-directory: microstrain-daq-utils
+        run: hatch build
+
+      - name: Build microstrain-daq-jupyter
+        working-directory: microstrain-daq-jupyter
+        run: hatch build
+
+      - name: Upload microstrain-daq-utils dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-daq-utils
+          path: microstrain-daq-utils/dist/
+
+      - name: Upload microstrain-daq-jupyter dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-daq-jupyter
+          path: microstrain-daq-jupyter/dist/
+
+  create-release:
+    name: Create GitHub release
+    needs: [build-cpp-windows, build-cpp-linux, build-nuget, build-python]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download C++ Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cpp-linux
+          path: release-assets
+
+      - name: Download C++ Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cpp-windows
+          path: release-assets
+
+      - name: Generate changelog
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: CHANGES.md
+
+      - name: Detect prerelease
+        id: prerelease
+        run: |
+          if [[ "$RELEASE_VERSION" == *-* ]]; then
+            echo "value=true" >> $GITHUB_OUTPUT
+          else
+            echo "value=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build release body
+        run: |
+          PKG_VERSION="${RELEASE_VERSION#v}"
+          {
+            cat CHANGES.md
+            echo ""
+            echo "---"
+            echo ""
+            echo "## Packages"
+            echo ""
+            echo "| Language | Package | Install |"
+            echo "|---|---|---|"
+            echo "| Python | [microstrain-daq-utils ${PKG_VERSION}](https://pypi.org/project/microstrain-daq-utils/${PKG_VERSION}/) | \`pip install microstrain-daq-utils==${PKG_VERSION}\` |"
+            echo "| Python | [microstrain-daq-jupyter ${PKG_VERSION}](https://pypi.org/project/microstrain-daq-jupyter/${PKG_VERSION}/) | \`pip install microstrain-daq-jupyter==${PKG_VERSION}\` |"
+            echo "| C# | [MicroStrain.DaqUtils ${PKG_VERSION}](https://www.nuget.org/packages/MicroStrain.DaqUtils/${PKG_VERSION}) | \`dotnet add package MicroStrain.DaqUtils --version ${PKG_VERSION}\` |"
+            echo ""
+            echo "## C++ Assets"
+            echo ""
+            echo "Download the appropriate platform archive from the assets below."
+            echo "Extract and add the \`include/\` directory to your compiler include path."
+          } > release-body.md
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_VERSION }}
+          body_path: release-body.md
+          prerelease: ${{ steps.prerelease.outputs.value }}
+          files: |
+            release-assets/*.tar.gz
+            release-assets/*.zip
+
+  publish-nuget:
+    name: Publish to NuGet.org
+    needs: [build-nuget, create-release]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Download NuGet artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-package
+          path: nuget-dist
+
+      - name: NuGet login
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: microstrain-by-hbk
+
+      - name: Push to NuGet.org
+        run: |
+          dotnet nuget push nuget-dist/*.nupkg \
+            --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+
+  publish-daq-utils:
+    name: Publish microstrain-daq-utils to PyPI
+    needs: [build-python, create-release]
+    runs-on: ubuntu-latest
+    environment: pypi-daq-utils
+    permissions:
+      id-token: write
+    steps:
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-daq-utils
+          path: dist-daq-utils
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist-daq-utils/
+          skip-existing: true
+
+  publish-daq-jupyter:
+    name: Publish microstrain-daq-jupyter to PyPI
+    needs: [build-python, create-release]
+    runs-on: ubuntu-latest
+    environment: pypi-daq-jupyter
+    permissions:
+      id-token: write
+    steps:
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-daq-jupyter
+          path: dist-daq-jupyter
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist-daq-jupyter/
+          skip-existing: true

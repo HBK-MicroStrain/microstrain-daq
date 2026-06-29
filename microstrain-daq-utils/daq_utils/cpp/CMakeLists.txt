@@ -14,6 +14,10 @@ if(NOT openDAQ_FOUND)
         GIT_REPOSITORY https://github.com/openDAQ/openDAQ.git
         GIT_TAG        v3.30.3
     )
+    set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+    set(OPENDAQ_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
+    set(OPENDAQ_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(OPENDAQ_ENABLE_SIMULATOR OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(openDAQ)
 endif()
 
@@ -30,3 +34,7 @@ target_include_directories(microstrain_daq_utils PUBLIC
 
 target_link_libraries(microstrain_daq_utils PRIVATE daq::opendaq)
 target_compile_features(microstrain_daq_utils PUBLIC cxx_std_17)
+
+if(MSVC)
+    target_compile_options(microstrain_daq_utils PRIVATE /MP)
+endif()
