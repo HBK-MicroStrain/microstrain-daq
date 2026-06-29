@@ -43,16 +43,17 @@ result = daq_utils.call(node, "Control.SetToIdle", 3000)
 print("Setting Node to Idle")
 
 # Using the SetToIdleResult object, check if the Set to Idle operation is complete.
+# NUM_CHECKS is used here as an arbitrary limit while checking the idle status
 for i in range(NUM_CHECKS):
     success = result.get_property_value('Success')                                        
     status = result.get_property_value('Status')                                          
     print(f"Status: [Success={success}, Status={status}]") 
                           
-    if success:                                                                           
+    if success:   
         break
 
 # Check the result of the Set to Idle operation
-final_status = status.get_property_value('Status')
+final_status = result.get_property_value('Status')
 
 # Completed successfully
 if final_status == daq_types.enum("SetToIdleResult", "setToIdleResult_success"):
