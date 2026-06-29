@@ -37,26 +37,26 @@ else:
 When in idle state, nodes can be discovered automatically and configured.
 
 ```
-# Call the set to idle function and get the resulting SetToIdleStatus object
-# Note: This starts the set to idle node command, which is an ongoing operation. The SetToIdleStatus should be queried for progress.
+# Call the set to idle function and get the resulting SetToIdleResult object
+# Note: This starts the set to idle node command, which is an ongoing operation. The SetToIdleResult should be queried for progress.
 status = daq_utils.call(node, "Control.SetToIdle", 1000)
 
 print("Setting Node to Idle")
 
-# Using the SetToIdleStatus object, check if the Set to Idle operation is complete.
+# Using the SetToIdleResult object, check if the Set to Idle operation is complete.
 while not status.get_property_value("Complete"):
     print(".", end="")
 
 # At this point, the Set to Idle operation has completed
 
 # Check the result of the Set to Idle operation
-result = status.get_property_value('Success')
+result = status.get_property_value('Status')
 
 # Completed successfully
-if result.get_property_value("Status") == daqTypes.enum("SetToIdleStatus", "setToIdleResult_success")
+if result == daq_types.enum("SetToIdleResult", "setToIdleResult_success")
     print("Successfully set to idle!")
 # Canceled by the user
-elif result == mscl.SetToIdleStatus.setToIdleResult_canceled:
+elif result == daq_types.enum("SetToIdleResult", "setToIdleResult_canceled)
     # Canceled by the user
     print("Set to Idle was canceled!")
 # Failed to perform the operation
