@@ -102,8 +102,8 @@ for groups in chGroups.get_property_value('Result'):
             eq = daq_utils.call(node, "Setup.Configure.Calibration.GetLinearEquation", groups.Mask)
 
             print("Linear Equation for: {0}".format(groups.Name))
-            print("Slope: {0:06.3f}".format(le.get_property_value("Slope")))
-            print("Offset: {0:06.3f}".format(le.get_property_value("Offset")))
+            print("Slope: {0:06.3f}".format(eq.get_property_value("Slope")))
+            print("Offset: {0:06.3f}".format(eq.get_property_value("Offset")))
 ```
 
 ### Setting Current Configuration Settings
