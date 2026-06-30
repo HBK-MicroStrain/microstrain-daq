@@ -229,3 +229,45 @@ else:
     # If we got here, disableBeacon was successful
     print("Successfully disabled the beacon on the Base Station")
 ```
+
+### Streaming Data
+
+The openDAQ module exposes each physical measurement channel as a separate signal. Data is read using a stream reader, which buffers incoming samples and lets you consume them at your own pace.
+
+```python
+import time
+import opendaq as daq
+
+# openDAQ delivers each measurement channel through its own signal, so a
+# separate StreamReader is needed for each one. Readers must be created once
+# before the read loop. Creating them inside the loop would discard any samples
+# buffered since the previous iteration.
+#
+# Signals only exist after the node has sent its first packet of data, so this
+# list will be empty if sampling has not started yet. Make sure the network is
+# running before building it.
+node_signal_readers = []
+for node in base_station.get_channels():
+    node_address = node.get_property_value('Advanced.NodeAddress')
+    for signal in node.get_signals(recursive=True):
+        # Each node exposes two kinds of signals: one "domain" signal that carries
+        # timestamps, and one value signal per active measurement channel. Value
+        # signals reference the domain signal for their time axis. We only want
+        # to read measurement values here, so skip any signal that is itself a
+        # domain signal (identified by having no domain_signal of its own).
+        if signal.domain_signal is not None:
+            reader = daq.StreamReader(signal)
+            node_signal_readers.append((node_address, signal.name, reader))
+
+# Poll for new samples
+while True:
+    for node_address, channel_name, reader in node_signal_readers:
+        count = reader.available_count
+        if count > 0:
+            values, timestamps = reader.read_with_timestamps(count)
+            for value, timestamp in zip(values, timestamps):
+                print(f"Node {node_address} | {channel_name}: {value} @ {timestamp}")
+    time.sleep(0.01)
+```
+
+> **Note:** Each measurement channel is delivered independently through its own signal. Samples taken at the same time across multiple channels on a node will share the same timestamp value.
