@@ -1,6 +1,8 @@
 # MicroStrain DAQ
 
-![platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-informational) ![Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue)
+![platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-informational) ![Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue) [![Latest](https://img.shields.io/github/v/release/HBK-MicroStrain-Internal/opendaq-module-validation?include_prereleases&label=Latest)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/releases/latest)
+
+[![NuGet](https://img.shields.io/nuget/dt/MicroStrain.DaqUtils?logo=nuget)](https://www.nuget.org/packages/MicroStrain.DaqUtils) [![microstrain-daq-utils](https://img.shields.io/pypi/dm/microstrain-daq-utils?logo=pypi&label=microstrain-daq-utils)](https://pypi.org/project/microstrain-daq-utils/) [![microstrain-daq-jupyter](https://img.shields.io/pypi/dm/microstrain-daq-jupyter?logo=pypi&label=microstrain-daq-jupyter)](https://pypi.org/project/microstrain-daq-jupyter/)
 
 [![CI C++ (Windows)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-cpp-windows.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-cpp-windows.yml) [![CI C++ (Linux)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-cpp-linux.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-cpp-linux.yml) [![CI C#](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-csharp.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-csharp.yml) [![CD](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd.yml)
 

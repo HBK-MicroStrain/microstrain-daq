@@ -1,6 +1,6 @@
 [changelog]
 body = """
-{% if message %}# {{ message }}
+{% if message %}# {{ message | trim }}
 
 {% endif %}\
 {% set ordered_groups = ["Features", "Bug Fixes", "Documentation", "Performance", "Reverts"] %}\
@@ -30,4 +30,4 @@ commit_parsers = [
   { message = "^perf",    group = "Performance"   },
   { message = "^revert",  group = "Reverts"       },
 ]
-tag_pattern = "v[0-9]+\\.[0-9]+\\.[0-9]+"
+tag_pattern = "v[0-9]+\\.[0-9]+\\.[0-9]+.*"
