@@ -249,7 +249,7 @@ import opendaq as daq
 node_signal_readers = []
 for node in base_station.get_channels():
     node_address = node.get_property_value('Advanced.NodeAddress')
-    for signal in node.get_signals(recursive=True):
+    for signal in node.get_signals(daq.RecursiveSearchFilter(daq.AnySearchFilter())):
         # Each node exposes two kinds of signals: one "domain" signal that carries
         # timestamps, and one value signal per active measurement channel. Value
         # signals reference the domain signal for their time axis. We only want
@@ -264,7 +264,7 @@ while True:
     for node_address, channel_name, reader in node_signal_readers:
         count = reader.available_count
         if count > 0:
-            values, timestamps = reader.read_with_timestamps(count)
+            values, timestamps = reader.read_with_domain(count)
             for value, timestamp in zip(values, timestamps):
                 print(f"Node {node_address} | {channel_name}: {value} @ {timestamp}")
     time.sleep(0.01)
