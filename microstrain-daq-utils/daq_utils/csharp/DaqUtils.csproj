@@ -10,6 +10,7 @@
     <Description>A library that simplifies working with openDAQ through extensions tailored for MicroStrain modules.</Description>
     <Authors>MicroStrain</Authors>
     <PackageSupportUrl>mailto:microstrainsupport@hbkworld.com</PackageSupportUrl>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
   </PropertyGroup>
 
   <ItemGroup>

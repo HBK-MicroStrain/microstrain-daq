@@ -1,13 +1,20 @@
 [changelog]
 body = """
-{% for group, commits in commits | group_by(attribute="group") %}\
-### {{ group | upper_first }}
+{% if message %}# {{ message | trim }}
 
-{% for commit in commits %}\
+{% endif %}\
+{% set ordered_groups = ["Features", "Bug Fixes", "Documentation", "Performance", "Reverts"] %}\
+{% for group_name in ordered_groups %}\
+{% set group_commits = commits | filter(attribute="group", value=group_name) %}\
+{% if group_commits | length > 0 %}\
+### {{ group_name }}
+
+{% for commit in group_commits %}\
 - {% if commit.scope %}**{{ commit.scope }}:** {% endif %}{{ commit.message }}\
 {% if commit.breaking %} [**BREAKING CHANGE**]{% endif %}
 
 {% endfor %}\
+{% endif %}\
 {% endfor %}\
 """
 trim = true
@@ -23,4 +30,4 @@ commit_parsers = [
   { message = "^perf",    group = "Performance"   },
   { message = "^revert",  group = "Reverts"       },
 ]
-tag_pattern = "v[0-9]+\\.[0-9]+\\.[0-9]+"
+tag_pattern = "v[0-9]+\\.[0-9]+\\.[0-9]+.*"
