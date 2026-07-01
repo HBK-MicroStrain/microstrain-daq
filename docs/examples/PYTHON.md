@@ -45,11 +45,11 @@ print("Setting Node to Idle")
 # Using the SetToIdleResult object, check if the Set to Idle operation is complete.
 # NUM_CHECKS is used here as an arbitrary limit while checking the idle status
 for i in range(NUM_CHECKS):
-    success = result.get_property_value('Success')                                        
-    status = result.get_property_value('Status')                                          
-    print(f"Status: [Success={success}, Status={status}]") 
-                          
-    if success:   
+    success = result.get_property_value('Success')
+    status = result.get_property_value('Status')
+    print(f"Status: [Success={success}, Status={status}]")
+
+    if success:
         break
 
 # Check the result of the Set to Idle operation
@@ -83,7 +83,7 @@ print("Total active channels: {0}".format(node.get_property_value('Control.Sampl
 print("# of sweeps: {0}".format(node.get_property_value('Control.Sample.NumSweeps')))
 ```
 
-If a configuration function requires a channel mask parameter, this indicates that the option may affect one or more channels on the Node. You can either: 
+If a configuration function requires a channel mask parameter, this indicates that the option may affect one or more channels on the Node. You can either:
 
 - Provide the channel mask when asking for the configuration (if known beforehand)
 - Programmatically determine the mask for each setting
@@ -236,7 +236,6 @@ The openDAQ module exposes each physical measurement channel as a separate signa
 
 ```python
 import time
-import opendaq as daq
 
 # openDAQ delivers each measurement channel through its own signal, so a
 # separate StreamReader is needed for each one. Readers must be created once
