@@ -37,34 +37,15 @@ else:
 The **Set to Idle** command is used to put a Node that is sampling, or sleeping, back into the Idle Mode so that it may be communicated with.
 
 ```python
-# The integer argument here is the command timeout in milliseconds
-result = daq_utils.call(node, "Control.SetToIdle", 3000)
+# The argument is the timeout in milliseconds
+result = daq_utils.call(node, "Control.SetToIdle", 8000)
 
 print("Setting Node to Idle")
 
-# Using the SetToIdleResult object, check if the Set to Idle operation is complete.
-# NUM_CHECKS is used here as an arbitrary limit while checking the idle status
-for i in range(NUM_CHECKS):
-    success = result.get_property_value('Success')
-    status = result.get_property_value('Status')
-    print(f"Status: [Success={success}, Status={status}]")
-
-    if success:
-        break
-
-# Check the result of the Set to Idle operation
-final_status = result.get_property_value('Status')
-
-# Completed successfully
-if final_status == daq_types.enum("SetToIdleResult", "setToIdleResult_success"):
-    print("Successfully set to idle!")
-# Canceled by the user
-elif final_status == daq_types.enum("SetToIdleResult", "setToIdleResult_canceled"):
-    # Canceled by the user
-    print("Set to Idle was canceled!")
-# Failed to perform the operation
-else:
-    print("Set to Idle has failed!")
+complete = result.get_property_value('Complete')
+status = result.get_property_value('Status')
+success = result.get_property_value('Success')
+print(f"Status: [Complete={complete}, Status={status}, Success={success}]")
 ```
 
 ### Getting Current Configuration Settings
