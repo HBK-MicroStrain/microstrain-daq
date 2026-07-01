@@ -42,10 +42,10 @@ result = daq_utils.call(node, "Control.SetToIdle", 8000)
 
 print("Setting Node to Idle")
 
-complete = result.get_property_value('Complete')                                        
-status = result.get_property_value('Status') 
+complete = result.get_property_value('Complete')
+status = result.get_property_value('Status')
 success = result.get_property_value('Success')
-print(f"Status: [Complete={complete}, Status={status}, Success={success}]") 
+print(f"Status: [Complete={complete}, Status={status}, Success={success}]")
 ```
 
 ### Getting Current Configuration Settings
@@ -64,7 +64,7 @@ print("Total active channels: {0}".format(node.get_property_value('Control.Sampl
 print("# of sweeps: {0}".format(node.get_property_value('Control.Sample.NumSweeps')))
 ```
 
-If a configuration function requires a channel mask parameter, this indicates that the option may affect one or more channels on the Node. You can either: 
+If a configuration function requires a channel mask parameter, this indicates that the option may affect one or more channels on the Node. You can either:
 
 - Provide the channel mask when asking for the configuration (if known beforehand)
 - Programmatically determine the mask for each setting
@@ -217,7 +217,6 @@ The openDAQ module exposes each physical measurement channel as a separate signa
 
 ```python
 import time
-import opendaq as daq
 
 # openDAQ delivers each measurement channel through its own signal, so a
 # separate StreamReader is needed for each one. Readers must be created once
@@ -230,7 +229,7 @@ import opendaq as daq
 node_signal_readers = []
 for node in base_station.get_channels():
     node_address = node.get_property_value('Advanced.NodeAddress')
-    for signal in node.get_signals(recursive=True):
+    for signal in node.get_signals(daq.RecursiveSearchFilter(daq.AnySearchFilter())):
         # Each node exposes two kinds of signals: one "domain" signal that carries
         # timestamps, and one value signal per active measurement channel. Value
         # signals reference the domain signal for their time axis. We only want
@@ -245,7 +244,7 @@ while True:
     for node_address, channel_name, reader in node_signal_readers:
         count = reader.available_count
         if count > 0:
-            values, timestamps = reader.read_with_timestamps(count)
+            values, timestamps = reader.read_with_domain(count)
             for value, timestamp in zip(values, timestamps):
                 print(f"Node {node_address} | {channel_name}: {value} @ {timestamp}")
     time.sleep(0.01)
