@@ -1,10 +1,10 @@
 # MicroStrain DAQ
 
-![platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-informational) ![Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue) [![Latest](https://img.shields.io/github/v/release/HBK-MicroStrain-Internal/opendaq-module-validation?include_prereleases&label=Latest)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/releases/latest)
+![platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-informational) ![Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue) [![Latest](https://img.shields.io/github/v/release/HBK-MicroStrain/opendaq-module-validation?include_prereleases&label=Latest)](https://github.com/HBK-MicroStrain/opendaq-module-validation/releases/latest)
 
-[![C++](https://img.shields.io/github/downloads/HBK-MicroStrain-Internal/opendaq-module-validation/total?logo=github&label=C%2B%2B)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/releases/latest) [![C#](https://img.shields.io/nuget/dt/MicroStrain.DaqUtils?logo=nuget&label=C%23)](https://www.nuget.org/packages/MicroStrain.DaqUtils) [![Python (daq-utils)](https://img.shields.io/pypi/dm/microstrain-daq-utils?logo=pypi&label=Python%20%28daq-utils%29)](https://pypi.org/project/microstrain-daq-utils/) [![Python (jupyter)](https://img.shields.io/pypi/dm/microstrain-daq-jupyter?logo=pypi&label=Python%20%28jupyter%29)](https://pypi.org/project/microstrain-daq-jupyter/)
+[![C++](https://img.shields.io/github/downloads/HBK-MicroStrain/opendaq-module-validation/total?logo=github&label=C%2B%2B)](https://github.com/HBK-MicroStrain/opendaq-module-validation/releases/latest) [![C#](https://img.shields.io/nuget/dt/MicroStrain.DaqUtils?logo=nuget&label=C%23)](https://www.nuget.org/packages/MicroStrain.DaqUtils) [![Python (daq-utils)](https://img.shields.io/pypi/dm/microstrain-daq-utils?logo=pypi&label=Python%20%28daq-utils%29)](https://pypi.org/project/microstrain-daq-utils/) [![Python (jupyter)](https://img.shields.io/pypi/dm/microstrain-daq-jupyter?logo=pypi&label=Python%20%28jupyter%29)](https://pypi.org/project/microstrain-daq-jupyter/)
 
-[![CI C++ (Windows)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-cpp-windows.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-cpp-windows.yml) [![CI C++ (Linux)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-cpp-linux.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-cpp-linux.yml) [![CI C#](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-csharp.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/ci-csharp.yml) [![CD](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd.yml/badge.svg)](https://github.com/HBK-MicroStrain-Internal/opendaq-module-validation/actions/workflows/cd.yml)
+[![CI C++ (Windows)](https://github.com/HBK-MicroStrain/opendaq-module-validation/actions/workflows/ci-cpp-windows.yml/badge.svg)](https://github.com/HBK-MicroStrain/opendaq-module-validation/actions/workflows/ci-cpp-windows.yml) [![CI C++ (Linux)](https://github.com/HBK-MicroStrain/opendaq-module-validation/actions/workflows/ci-cpp-linux.yml/badge.svg)](https://github.com/HBK-MicroStrain/opendaq-module-validation/actions/workflows/ci-cpp-linux.yml) [![CI C#](https://github.com/HBK-MicroStrain/opendaq-module-validation/actions/workflows/ci-csharp.yml/badge.svg)](https://github.com/HBK-MicroStrain/opendaq-module-validation/actions/workflows/ci-csharp.yml) [![CD](https://github.com/HBK-MicroStrain/opendaq-module-validation/actions/workflows/cd.yml/badge.svg)](https://github.com/HBK-MicroStrain/opendaq-module-validation/actions/workflows/cd.yml)
 
 An opinionated library that enhances working with [openDAQ](https://opendaq.com/) modules from [MicroStrain by HBK](https://www.hbkworld.com/en/Campaign/microstrain-by-hbk).
 
@@ -18,8 +18,9 @@ Add the library to your project using CMake FetchContent, replacing `<version>` 
 include(FetchContent)
 FetchContent_Declare(
     MicroStrainDaqUtils
-    GIT_REPOSITORY https://github.com/hbkworld/microstrain-daq-utils.git
+    GIT_REPOSITORY https://github.com/HBK-MicroStrain/opendaq-module-validation.git
     GIT_TAG        <version>
+    SOURCE_SUBDIR  microstrain-daq-utils/daq_utils/cpp
 )
 FetchContent_MakeAvailable(MicroStrainDaqUtils)
 
