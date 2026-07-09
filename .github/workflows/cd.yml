@@ -31,22 +31,6 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/build-cpp-windows
 
-      - name: Package artifact
-        shell: pwsh
-        run: |
-          $version = $env:RELEASE_VERSION
-          New-Item -ItemType Directory -Path cpp-artifact/include -Force | Out-Null
-          Copy-Item -Recurse -Path microstrain-daq-utils/daq_utils/cpp/include/* -Destination cpp-artifact/include/
-          Get-ChildItem -Path cpp-build/Release -Filter "microstrain_daq_utils*" -ErrorAction SilentlyContinue |
-            Copy-Item -Destination cpp-artifact/ -Force
-          Compress-Archive -Path cpp-artifact/* -DestinationPath "microstrain-daq-utils-cpp-windows-x64-${version}.zip" -Force
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: cpp-windows
-          path: microstrain-daq-utils-cpp-windows-x64-*.zip
-
   build-cpp-linux:
     name: Build C++ (Linux)
     needs: gate
@@ -58,20 +42,6 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/build-cpp-linux
-
-      - name: Package artifact
-        run: |
-          VERSION="$RELEASE_VERSION"
-          mkdir -p cpp-artifact/include
-          cp -r microstrain-daq-utils/daq_utils/cpp/include/* cpp-artifact/include/
-          find cpp-build -name "*microstrain_daq_utils*" -type f | xargs -I{} cp {} cpp-artifact/
-          tar -czf "microstrain-daq-utils-cpp-linux-x64-${VERSION}.tar.gz" -C cpp-artifact .
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: cpp-linux
-          path: microstrain-daq-utils-cpp-linux-x64-*.tar.gz
 
   build-nuget:
     name: Build NuGet package
@@ -89,13 +59,13 @@ jobs:
         id: cache-opendaq-net
         with:
           path: microstrain-daq-utils/daq_utils/csharp/opendaq-net
-          key: opendaq-net-3.30.3.23
+          key: opendaq-net-3.40.0.23
 
       - name: Download openDAQ.Net
         if: steps.cache-opendaq-net.outputs.cache-hit != 'true'
         run: |
           curl -L -o opendaq.net.nupkg \
-            "https://github.com/openDAQ/openDAQ/releases/download/v3.30.3/opendaq.net.3.30.3.23.nupkg"
+            "https://github.com/openDAQ/openDAQ/releases/download/v3.40.0/opendaq.net.3.40.0.23.nupkg"
           unzip -o opendaq.net.nupkg -d microstrain-daq-utils/daq_utils/csharp/opendaq-net
 
       - name: Setup .NET 8
@@ -191,18 +161,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download C++ Linux artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: cpp-linux
-          path: release-assets
-
-      - name: Download C++ Windows artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: cpp-windows
-          path: release-assets
-
       - name: Generate changelog
         uses: orhun/git-cliff-action@v4
         with:
@@ -232,14 +190,10 @@ jobs:
             echo ""
             echo "| Language | Package | Install |"
             echo "|---|---|---|"
+            echo "| C++ | — | See [Installation](https://github.com/HBK-MicroStrain/microstrain-daq#c) for how to install the C++ library |"
             echo "| Python | [microstrain-daq-utils ${PKG_VERSION}](https://pypi.org/project/microstrain-daq-utils/${PKG_VERSION}/) | \`pip install microstrain-daq-utils==${PKG_VERSION}\` |"
             echo "| Python | [microstrain-daq-jupyter ${PKG_VERSION}](https://pypi.org/project/microstrain-daq-jupyter/${PKG_VERSION}/) | \`pip install microstrain-daq-jupyter==${PKG_VERSION}\` |"
             echo "| C# | [MicroStrain.DaqUtils ${PKG_VERSION}](https://www.nuget.org/packages/MicroStrain.DaqUtils/${PKG_VERSION}) | \`dotnet add package MicroStrain.DaqUtils --version ${PKG_VERSION}\` |"
-            echo ""
-            echo "## C++ Assets"
-            echo ""
-            echo "Download the appropriate platform archive from the assets below."
-            echo "Extract and add the \`include/\` directory to your compiler include path."
           } > release-body.md
 
       - name: Create release
@@ -248,9 +202,6 @@ jobs:
           tag_name: ${{ env.RELEASE_VERSION }}
           body_path: release-body.md
           prerelease: ${{ steps.prerelease.outputs.value }}
-          files: |
-            release-assets/*.tar.gz
-            release-assets/*.zip
 
   publish-nuget:
     name: Publish to NuGet.org
