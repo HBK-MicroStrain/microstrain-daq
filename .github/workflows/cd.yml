@@ -21,28 +21,6 @@ jobs:
     steps:
       - run: echo "Authorized tag push by ${{ github.actor }}"
 
-  build-cpp-windows:
-    name: Build C++ (Windows)
-    needs: gate
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/build-cpp-windows
-
-  build-cpp-linux:
-    name: Build C++ (Linux)
-    needs: gate
-    # Pinned to 22.04 — Ubuntu 24.04 dropped Mono from its apt repos and openDAQ's
-    # RTGen code generation tool requires mono at build time.
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/build-cpp-linux
-
   build-nuget:
     name: Build NuGet package
     needs: gate
@@ -151,7 +129,7 @@ jobs:
 
   create-release:
     name: Create GitHub release
-    needs: [build-cpp-windows, build-cpp-linux, build-nuget, build-python]
+    needs: [build-nuget, build-python]
     runs-on: ubuntu-latest
     permissions:
       contents: write
