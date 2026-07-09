@@ -3,6 +3,9 @@ bin/
 obj/
 packages/
 
+# Vendored openDAQ.Net binaries
+microstrain-daq-utils/daq_utils/csharp/opendaq-net/
+
 # Track the modules directory but ignore its contents
 /modules/*
 !/modules/.gitkeep

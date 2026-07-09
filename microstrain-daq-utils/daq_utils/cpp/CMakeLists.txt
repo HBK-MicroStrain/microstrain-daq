@@ -6,13 +6,13 @@ get_project_version_from_git_tag("v" REPO_FULL_VERSION REPO_NUMERIC_VERSION)
 project(MicroStrainDaqUtils VERSION ${REPO_NUMERIC_VERSION})
 set(PROJECT_VERSION ${REPO_FULL_VERSION})
 
-find_package(openDAQ 3.30.3 EXACT QUIET)
+find_package(openDAQ 3.40.0 EXACT QUIET)
 if(NOT openDAQ_FOUND)
     include(FetchContent)
     FetchContent_Declare(
         openDAQ
         GIT_REPOSITORY https://github.com/openDAQ/openDAQ.git
-        GIT_TAG        v3.30.3
+        GIT_TAG        v3.40.0
     )
     set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
     set(OPENDAQ_ENABLE_TESTS OFF CACHE BOOL "" FORCE)

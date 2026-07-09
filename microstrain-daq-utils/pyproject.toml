@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "An opinionated library that enhances working with openDAQ modules from MicroStrain by HBK."
 requires-python = ">=3.9"
 dependencies = [
-    "opendaq==3.30.3",
+    "opendaq==3.40.0",
 ]
 
 [project.optional-dependencies]

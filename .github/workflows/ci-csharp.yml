@@ -25,13 +25,13 @@ jobs:
         id: cache-opendaq-net
         with:
           path: microstrain-daq-utils/daq_utils/csharp/opendaq-net
-          key: opendaq-net-3.30.3.23
+          key: opendaq-net-3.40.0.23
 
       - name: Download openDAQ.Net
         if: steps.cache-opendaq-net.outputs.cache-hit != 'true'
         run: |
           curl -L -o opendaq.net.nupkg \
-            "https://github.com/openDAQ/openDAQ/releases/download/v3.30.3/opendaq.net.3.30.3.23.nupkg"
+            "https://github.com/openDAQ/openDAQ/releases/download/v3.40.0/opendaq.net.3.40.0.23.nupkg"
           unzip -o opendaq.net.nupkg -d microstrain-daq-utils/daq_utils/csharp/opendaq-net
 
       - name: Setup .NET 8
