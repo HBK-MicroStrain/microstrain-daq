@@ -251,3 +251,80 @@ while True:
 ```
 
 > **Note:** Each measurement channel is delivered independently through its own signal. Samples taken at the same time across multiple channels on a node will share the same timestamp value.
+
+### Downloading Logged Data
+
+A Node can keep recording to its own internal memory even if it loses connection to the Base Station. That data can be downloaded into openDAQ signals just like live data.
+
+To view the current datalogging status for a node:
+
+```python
+print("Datalog sessions stored on node: {0}".format(node.get_property_value('Setup.DataManagement.NumDatalogSessions')))
+print("Node storage full: {0}%".format(node.get_property_value('Setup.DataManagement.PercentFull')))
+```
+
+Before starting a download, call `PrepareDownload` to pre-create the datalog signals so readers can be attached to them.
+
+> Note: If no reader is attached before `DownloadData` is called, the download will fail with an error.
+
+```python
+prepare_result = daq_utils.call(node, "Setup.DataManagement.PrepareDownload")
+
+if not prepare_result.get_property_value('Success'):
+    print("Failed to prepare for download")
+```
+
+Each logged channel is exposed as its own signal, named with a "DataLog_ch" prefix. Once the download is prepared, attach readers to each:
+
+```python
+datalog_readers = []
+for signal in node.get_signals(daq.RecursiveSearchFilter(daq.AnySearchFilter())):
+    if signal.name.startswith("DataLog_ch"):
+        datalog_readers.append((signal.name, daq.StreamReader(signal)))
+```
+
+With readers in place, start the download:
+
+```python
+# The argument is the number of retries allowed per sweep before the download is aborted
+download_result = daq_utils.call(node, "Setup.DataManagement.DownloadData", 3)
+
+if not download_result.get_property_value('Success'):
+    print("Failed to start download")
+else:
+    print("Download started")
+```
+
+The download runs asynchronously, so `DownloadData` returns immediately and progress must be polled separately:
+
+```python
+# Poll for progress until the download reaches a terminal state
+while True:
+    progress = daq_utils.call(node, "Setup.DataManagement.DownloadProgress")
+    state = progress.get_property_value('State')
+    print(f"State: {state}, Progress: {progress.get_property_value('Progress')}%")
+
+    if state in ("Complete", "Failed", "Canceled"):
+        break
+
+    # Read out any samples that have arrived so far
+    for channel_name, reader in datalog_readers:
+        count = reader.available_count
+        if count > 0:
+            values, timestamps = reader.read_with_domain(count)
+            for value, timestamp in zip(values, timestamps):
+                print(f"{channel_name}: {value} @ {timestamp}")
+
+    time.sleep(0.1)
+```
+
+To stop a download before it finishes, call `CancelDownload`:
+
+```python
+cancel_result = daq_utils.call(node, "Setup.DataManagement.CancelDownload")
+
+if not cancel_result.get_property_value('Success'):
+    print("Failed to cancel download")
+```
+
+> **Note:** A download can only be canceled while it is in progress. Calling `CancelDownload` when no download is running returns `Success` as False.
