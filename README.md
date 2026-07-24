@@ -104,7 +104,7 @@ Then, select the desired template:
 
 ## Usage
 
-See the openDAQ [documentation](https://docs.opendaq.com/manual/opendaq/3.30/introduction.html) for a full reference on the openDAQ API. For wireless-specific usage, see the [Wireless guide](docs/WIRELESS.md).
+See the openDAQ [documentation](https://docs.opendaq.com/manual/opendaq/3.30/introduction.html) for a full reference on the openDAQ API. For wireless-specific usage and examples, see the [Wireless guide](docs/WIRELESS.md).
 
 ### Adding modules
 
