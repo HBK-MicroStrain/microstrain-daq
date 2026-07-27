@@ -79,9 +79,7 @@ If a configuration function requires a channel mask parameter, this indicates th
 daq_utils::DaqTypeFactory daqTypes(instance);
 
 daq::BaseObjectPtr chGroups = daq_utils::Call(node, "Capabilities.ChannelGroups");
-
 daq::ListPtr<daq::IBaseObject> groupsList = chGroups.asPtr<daq::IPropertyObject>().getPropertyValue("Result");
-
 daq::EnumerationPtr linearEqSetting = daqTypes.MakeEnum("ChannelGroupSetting", "chSetting_linearEquation");
 
 for (size_t i = 0; i < groupsList.getCount(); ++i)
@@ -111,9 +109,9 @@ for (size_t i = 0; i < groupsList.getCount(); ++i)
 To set current configuration settings for a node:
 
 ```cpp
-std::cout << "\nChanging configuration settings..." << "\n";
-
 daq_utils::DaqTypeFactory daqTypes(instance);
+
+std::cout << "\nChanging configuration settings..." << "\n";
 
 // Set the configuration options that we want to change
 node.asPtr<daq::IPropertyObject>().setPropertyValue("Setup.Configure.Power.DefaultMode", daqTypes.MakeEnum("DefaultMode", "defaultMode_idle"));
@@ -130,10 +128,8 @@ daq::BaseObjectPtr verification = daq_utils::Call(node, "Setup.Configure.Verify"
 if (!verification.asPtr<daq::IPropertyObject>().getPropertyValue("Success"))
 {
     std::cout << "\nFailed to verify the configuration. The following issues were found:" << "\n";
-
     // Print out all the issues that were found
     std::cout << verification.asPtr<daq::IPropertyObject>().getPropertyValue("Issues") << "\n";
-
     std::cout << "Configuration will not be applied." << "\n";
 }
 else
@@ -148,7 +144,6 @@ else
     {
         // Print out all the issues that were found
         std::cout << application.asPtr<daq::IPropertyObject>().getPropertyValue("Issues") << "\n";
-
         std::cout << "Application failed." << "\n";
     }
 }
@@ -204,12 +199,10 @@ To enable a beacon:
 
 ```cpp
 // Make sure we can ping the base station
-daq::BaseObjectPtr enableBeaconResult = daq_utils::Call(base_station, "Control.EnableBeacon");
-daq::PropertyObjectPtr enableBeaconObj = enableBeaconResult.asPtr<daq::IPropertyObject>();
+daq::PropertyObjectPtr enableBeaconResult = daq_utils::Call(base_station, "Control.EnableBeacon").asPtr<daq::IPropertyObject>();
+daq::BaseObjectPtr beaconTime = enableBeaconResult.getPropertyValue("Timestamp");
 
-daq::BaseObjectPtr beaconTime = enableBeaconObj.getPropertyValue("Timestamp");
-
-if (!enableBeaconObj.getPropertyValue("Success"))
+if (!enableBeaconResult.getPropertyValue("Success"))
 {
     std::cout << "Failed to ping the Base Station" << "\n";
 }
@@ -224,7 +217,7 @@ if (base_station.asPtr<daq::IPropertyObject>().getPropertyValue("Capabilities.Su
 std::cout << "Attempting to enable the beacon..." << "\n";
 
 // Enable the beacon on the Base Station using the PC time
-if (!enableBeaconObj.getPropertyValue("Success"))
+if (!enableBeaconResult.getPropertyValue("Success"))
 {
     std::cout << "Failed to enable the beacon" << "\n";
 }
@@ -233,7 +226,6 @@ else
     // If we got here, no exception was thrown, so enableBeacon was successful
     std::cout << "Successfully enabled the beacon on the Base Station" << "\n";
     std::cout << "Beacon's initial Timestamp: " << beaconTime << "\n";
-
     std::cout << "Beacon is active" << "\n";
 }
 ```
@@ -244,10 +236,9 @@ To disable a beacon:
 
 ```cpp
 // Disable the beacon on the Base Station
-daq::BaseObjectPtr disableBeaconResult = daq_utils::Call(base_station, "Control.DisableBeacon");
-daq::PropertyObjectPtr disableBeaconObj = disableBeaconResult.asPtr<daq::IPropertyObject>();
+daq::BaseObjectPtr disableBeaconResult = daq_utils::Call(base_station, "Control.DisableBeacon").asPtr<daq::IPropertyObject>();
 
-if (!disableBeaconObj.getPropertyValue("Success"))
+if (!disableBeaconResult.getPropertyValue("Success"))
 {
     std::cout << "Failed to disable the beacon" << "\n";
 }
@@ -284,7 +275,7 @@ struct NodeSignalReader
 
 std::vector<NodeSignalReader> node_signal_readers;
 
-std::function<void()> build_live_readers = [&base_station, &node_signal_readers]()
+void BuildLiveReaders(const daq::ChannelPtr& base_station, std::vector<NodeSignalReader>& node_signal_readers)
 {
     node_signal_readers.clear();
 
@@ -307,14 +298,14 @@ std::function<void()> build_live_readers = [&base_station, &node_signal_readers]
             node_signal_readers.push_back({node_address, signalName, reader});
         }
     }
-};
+}
 
-build_live_readers();
+BuildLiveReaders(base_station, node_signal_readers);
 
 for (int retry = 0; retry < 20 && node_signal_readers.empty(); ++retry)
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(250));
-    build_live_readers();
+    BuildLiveReaders(base_station, node_signal_readers);
 }
 
     std::cout << "Readers created: " << node_signal_readers.size() << "\n";
@@ -333,6 +324,7 @@ while (true)
         std::vector<double> values(count);
         std::vector<uint64_t> timestamps(count);
         item.reader.readWithDomain(values.data(), timestamps.data(), &count);
+
         if (count > 0)
         {
             for (daq::SizeT i = 0; i < count; ++i)
@@ -342,6 +334,7 @@ while (true)
             }
         }
     }
+
     std::this_thread::sleep_for(std::chrono::milliseconds(25));
 }
 ```
@@ -428,11 +421,13 @@ while (true)
     for (DatalogReader& [channel_name, reader] : datalog_readers)
     {
         daq::SizeT count = reader.getAvailableCount();
+
         if (count > 0)
         {
             std::vector<double> values(count);
             std::vector<uint64_t> timestamps(count);
             reader.readWithDomain(values.data(), timestamps.data(), &count);
+            
             for (daq::SizeT i = 0; i < count; ++i)
             {
                 std::cout << channel_name << ": " << values[i] << " @ " << timestamps[i] << "\n";
