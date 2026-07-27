@@ -53,8 +53,6 @@ If a node channel is missing, try powering the node off and back on again.
 
 ## Wireless Python Examples
 
-This document provides examples of common operations with wireless devices using the Python API.
-
 ### Pinging Nodes
 
 The ping command is used to check if there is proper communication between the base station and the node.
