@@ -37,7 +37,7 @@ jobs:
         id: cache-opendaq-net
         with:
           path: microstrain-daq-utils/daq_utils/csharp/opendaq-net
-          key: opendaq-net-3.40.0.23
+          key: opendaq-net-3.40.0.23-win-x64-fix
 
       - name: Download openDAQ.Net
         if: steps.cache-opendaq-net.outputs.cache-hit != 'true'
@@ -45,6 +45,30 @@ jobs:
           curl -L -o opendaq.net.nupkg \
             "https://github.com/openDAQ/openDAQ/releases/download/v3.40.0/opendaq.net.3.40.0.23.nupkg"
           unzip -o opendaq.net.nupkg -d microstrain-daq-utils/daq_utils/csharp/opendaq-net
+
+      # openDAQ.Net 3.40.0.23's win-x64 natives went missing from the upstream
+      # nupkg (their pack step silently drops a RID when its artifact wasn't
+      # available at pack time) - backfill them from the Windows SDK installer
+      # from the same v3.40.0 release so consumers still get win-x64 for free.
+      - name: Install 7zip
+        if: steps.cache-opendaq-net.outputs.cache-hit != 'true'
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: Backfill win-x64 natives from Windows installer
+        if: steps.cache-opendaq-net.outputs.cache-hit != 'true'
+        run: |
+          curl -L -o opendaq-win.exe \
+            "https://github.com/openDAQ/openDAQ/releases/download/v3.40.0/opendaq-3.40.0-x86_64-windows-msvc-143-release.exe"
+          7z x -y opendaq-win.exe -owin-installer bin
+
+          WIN_NATIVE=microstrain-daq-utils/daq_utils/csharp/opendaq-net/runtimes/win-x64/native
+          mkdir -p "$WIN_NATIVE/modules"
+          cp win-installer/bin/copendaq.dll \
+             win-installer/bin/daqcoreobjects-64-3.dll \
+             win-installer/bin/daqcoretypes-64-3.dll \
+             win-installer/bin/opendaq-64-3.dll \
+             "$WIN_NATIVE/"
+          cp win-installer/bin/modules/*.dll "$WIN_NATIVE/modules/"
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
