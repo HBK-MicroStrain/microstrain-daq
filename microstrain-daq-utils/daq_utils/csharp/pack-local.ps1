@@ -18,6 +18,9 @@
 .EXAMPLE
   dotnet add package MicroStrain.DaqUtils --version <version> --source <path from output>
   Install the result into a separate throwaway test project (see README for the full flow).
+  This script also registers nuget-output as a NuGet source ("daqutils-local") on the
+  machine, so a later plain `dotnet build` in that project resolves it without any extra
+  per-project NuGet config.
 #>
 param(
     [switch]$Force
@@ -97,8 +100,21 @@ if (-not $nupkg) { throw "Pack succeeded but no MicroStrain.DaqUtils .nupkg was 
 
 $version = $nupkg.BaseName -replace '^MicroStrain\.DaqUtils\.', ''
 
+# Register nuget-output as a NuGet source (idempotent) so a plain `dotnet build`/`dotnet
+# restore` in ANY project can resolve MicroStrain.DaqUtils locally afterward - no per-project
+# nuget.config needed. `dotnet add package --source` only affects that one command; without
+# this, the next `dotnet build` falls back to nuget.org and fails with NU1102.
+$sourceName = "daqutils-local"
+$registeredPaths = (dotnet nuget list source --format Short) -replace '^[ED]\s+', ''
+$alreadyRegistered = $registeredPaths | Where-Object { $_.TrimEnd('\', '/') -ieq $outputDir.TrimEnd('\', '/') }
+if (-not $alreadyRegistered) {
+    dotnet nuget add source $outputDir --name $sourceName | Out-Null
+    Write-Host "Registered NuGet source '$sourceName' -> $outputDir" -ForegroundColor Green
+}
+
 Write-Host ""
 Write-Host "Packed: $($nupkg.FullName)" -ForegroundColor Green
 Write-Host ""
 Write-Host "To test it in a separate project:" -ForegroundColor Yellow
 Write-Host "  dotnet add package MicroStrain.DaqUtils --version $version --source `"$outputDir`""
+Write-Host "  dotnet build   # resolves automatically via the '$sourceName' NuGet source"

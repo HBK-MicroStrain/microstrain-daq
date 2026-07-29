@@ -6,6 +6,10 @@ packages/
 # Vendored openDAQ.Net binaries
 microstrain-daq-utils/daq_utils/csharp/opendaq-net/
 
+# pack-local.ps1 scratch/output
+microstrain-daq-utils/daq_utils/csharp/.pack-local-work/
+/nuget-output/
+
 # Track the modules directory but ignore its contents
 /modules/*
 !/modules/.gitkeep
