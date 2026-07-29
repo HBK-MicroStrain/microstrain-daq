@@ -88,6 +88,7 @@ long linearEqValue = 3;
 
 foreach (BaseObject groupItem in groupsList)
 {
+
     Struct? group = groupItem.Cast<Struct>();
     BaseObject? settingsObj = group.Get("Settings");
     ListObject<BaseObject>? settingsList = settingsObj.Cast<ListObject<BaseObject>>();
@@ -288,7 +289,10 @@ while (nodeSignalReaders.Count == 0)
 
             Daq.Core.OpenDAQ.StreamReader<double, ulong> reader = 
                 OpenDAQFactory.CreateStreamReader<double, ulong>(
-                    signal, ReadMode.Scaled, ReadTimeoutType.Any);
+                    signal, 
+                    ReadMode.Scaled, 
+                    ReadTimeoutType.Any
+            );
 
             nodeSignalReaders.Add((nodeAddress, signal.Name, reader));
         }
