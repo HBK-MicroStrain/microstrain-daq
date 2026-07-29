@@ -492,6 +492,41 @@ success = result.get_property_value('Success')
 var success = result?.Cast<PropertyObject>()?.GetPropertyValue("Success");
 ```
 
+### Inspecting Properties
+
+To view what properties are available for a device, channel, or group, create a `DaqPropertyInspector`:
+
+**C++**
+```cpp
+daq_utils::DaqPropertyInspector inspector(instance);
+```
+
+**Python**
+```python
+inspector = daq_utils.DaqPropertyInspector(instance)
+```
+
+**C#**
+```csharp
+var inspector = new DaqPropertyInspector(instance);
+```
+To inspect a property:
+
+**C++**
+```cpp
+inspector.Describe(node, "Setup.Configure.CommunicationProtocol");
+```
+
+**Python**
+```python
+inspector.describe(node, 'Setup.Configure.CommunicationProtocol')
+```
+
+**C#**
+```csharp
+inspector.Describe(node, "Setup.Configure.CommunicationProtocol");
+```
+
 ### Inspecting types
 
 To view what fields/values are available for openDAQ `Enumeration` and `Struct` types, create a `DaqTypeInspector`:

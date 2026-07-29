@@ -135,8 +135,9 @@ class DaqTypeInspector:
 class DaqPropertyInspector:
     def __init__(self, instance):
         self._instance = instance
-        
-    def _resolve_property(self, root, path):
+
+    # Splits paths by "." and traverses known path to find the requested property. Throws if any part of the path is invalid.
+    def _get_known_property(self, root, path):
         parts = path.split(".")
         obj = root
 
@@ -149,7 +150,7 @@ class DaqPropertyInspector:
         return obj.get_property(parts[-1])
 
     def describe(self, root, path):
-        prop = self._resolve_property(root, path)
+        prop = self._get_known_property(root, path)
         
         raw = str(prop.value_type)
         type_str = raw.split("CoreType.")[-1]

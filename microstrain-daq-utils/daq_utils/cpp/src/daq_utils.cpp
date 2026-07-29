@@ -52,7 +52,8 @@ std::string FieldTypeLabel(const daq::BaseObjectPtr& value)
     return CoreTypeToString(ct);
 }
 
-daq::PropertyPtr ResolveProperty(daq::PropertyObjectPtr root, const std::string& path)
+// Splits paths by "." and traverses known path to find the requested property. Throws if any part of the path is invalid.
+daq::PropertyPtr GetKnownProperty(daq::PropertyObjectPtr root, const std::string& path)
 {
     if (path.empty())
     {
@@ -254,7 +255,7 @@ void DaqPropertyInspector::Describe(daq::PropertyObjectPtr root, const std::stri
 
 void DaqPropertyInspector::Describe(daq::PropertyObjectPtr root, const std::string& path, std::ostream& out)
 {
-    daq::PropertyPtr prop = detail::ResolveProperty(root, path);
+    daq::PropertyPtr prop = detail::GetKnownProperty(root, path);
 
     out << "Type: " << detail::CoreTypeToString(prop.getValueType()) << "\n";
     out << "Description: " << std::string(prop.getDescription()) << "\n";

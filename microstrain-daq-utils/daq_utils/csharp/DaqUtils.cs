@@ -129,7 +129,8 @@ public class DaqPropertyInspector
     public DaqPropertyInspector(Instance instance) =>
         _instance = instance;
 
-    private static Property ResolveProperty(PropertyObject root, string path)
+// Splits paths by "." and traverses known path to find the requested property. Throws if any part of the path is invalid.
+    private static Property GetKnownProperty(PropertyObject root, string path)
     {
         if (string.IsNullOrWhiteSpace(path))
             throw new ArgumentException("Property path cannot be empty", nameof(path));
@@ -154,7 +155,7 @@ public class DaqPropertyInspector
 
     public void Describe(PropertyObject root, string path)
     {
-        Property prop = ResolveProperty(root, path);
+        Property prop = GetKnownProperty(root, path);
         string rawType = prop.ValueType.ToString();
         string typeStr = rawType.StartsWith("ct", StringComparison.Ordinal) ? rawType[2..] : rawType;
 
