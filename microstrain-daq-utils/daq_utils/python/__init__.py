@@ -132,6 +132,35 @@ class DaqTypeInspector:
         print()
 
 
+class DaqPropertyInspector:
+    def __init__(self, instance):
+        self._instance = instance
+        
+    def _resolve_property(self, root, path):
+        parts = path.split(".")
+        obj = root
+
+        for group_name in parts[:-1]:
+            obj = obj.get_property_value(group_name)
+            if not daq.IPropertyObject.can_cast_from(obj):
+                raise RuntimeError(f"'{group_name}' is not a property group in '{path}'")
+            obj = daq.IPropertyObject.cast_from(obj)
+
+        return obj.get_property(parts[-1])
+
+    def describe(self, root, path):
+        prop = self._resolve_property(root, path)
+        
+        raw = str(prop.value_type)
+        type_str = raw.split("CoreType.")[-1]
+        if type_str.startswith("ct"):
+            type_str = type_str[2:]
+
+        print(f'Type: {type_str}')
+        print(f'Description: {prop.description}')
+        print(f'Default Value: {prop.default_value}')    
+
+
 def _field_type_label(value):
     if value is None:
         return '?'

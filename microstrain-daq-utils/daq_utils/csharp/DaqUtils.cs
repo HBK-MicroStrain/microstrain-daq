@@ -122,6 +122,48 @@ public class DaqTypeInspector
     }
 }
 
+public class DaqPropertyInspector
+{
+    private readonly Instance _instance;
+
+    public DaqPropertyInspector(Instance instance) =>
+        _instance = instance;
+
+    private static Property ResolveProperty(PropertyObject root, string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            throw new ArgumentException("Property path cannot be empty", nameof(path));
+
+        string[] parts = path.Split('.');
+        if (parts.Any(string.IsNullOrEmpty))
+            throw new ArgumentException($"Invalid property path '{path}'", nameof(path));
+
+        PropertyObject obj = root;
+        foreach (string groupName in parts[..^1])
+        {
+            BaseObject groupValue = obj.GetPropertyValue(groupName);
+            PropertyObject? groupObj = groupValue.Cast<PropertyObject>();
+            if (groupObj == null)
+                throw new InvalidOperationException($"'{groupName}' is not a property group in '{path}'");
+
+            obj = groupObj;
+        }
+
+        return obj.GetProperty(parts[^1]);
+    }
+
+    public void Describe(PropertyObject root, string path)
+    {
+        Property prop = ResolveProperty(root, path);
+        string rawType = prop.ValueType.ToString();
+        string typeStr = rawType.StartsWith("ct", StringComparison.Ordinal) ? rawType[2..] : rawType;
+
+        Console.WriteLine($"Type: {typeStr}");
+        Console.WriteLine($"Description: {prop.Description}");
+        Console.WriteLine($"Default Value: {prop.DefaultValue} \n");
+    }
+}
+
 public static class DaqUtils
 {
     internal static string FieldTypeLabel(BaseObject value)
