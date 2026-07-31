@@ -159,9 +159,21 @@ public class DaqPropertyInspector
         string rawType = prop.ValueType.ToString();
         string typeStr = rawType.StartsWith("ct", StringComparison.Ordinal) ? rawType[2..] : rawType;
 
-        Console.WriteLine($"Type: {typeStr}");
-        Console.WriteLine($"Description: {prop.Description}");
-        Console.WriteLine($"Default Value: {prop.DefaultValue} \n");
+        var rows = new List<(string label, string value)>
+        {
+            ("Type", typeStr),
+            ("Description", prop.Description?.ToString() ?? string.Empty),
+            ("Default value", prop.DefaultValue?.ToString() ?? string.Empty)
+        };
+
+        int col0 = rows.Max(r => r.label.Length);
+        int col1 = rows.Max(r => r.value.Length);
+
+        Console.WriteLine();
+        Console.WriteLine($"{new string('-', col0)}-+-{new string('-', col1)}");
+        foreach (var (label, value) in rows)
+            Console.WriteLine($"{label.PadRight(col0)} | {value.PadRight(col1)}");
+        Console.WriteLine();
     }
 }
 

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <iostream>
 #include <ostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -257,9 +258,33 @@ void DaqPropertyInspector::Describe(daq::PropertyObjectPtr root, const std::stri
 {
     daq::PropertyPtr prop = detail::GetKnownProperty(root, path);
 
-    out << "Type: " << detail::CoreTypeToString(prop.getValueType()) << "\n";
-    out << "Description: " << std::string(prop.getDescription()) << "\n";
-    out << "Default Value: " << prop.getDefaultValue() << "\n";
+    std::ostringstream defaultValueStream;
+    defaultValueStream << prop.getDefaultValue();
+
+    std::vector<std::pair<std::string, std::string>> rows = {
+        {"Type", detail::CoreTypeToString(prop.getValueType())},
+        {"Description", std::string(prop.getDescription())},
+        {"Default value", defaultValueStream.str()}
+    };
+
+    size_t col0 = 0;
+    size_t col1 = 0;
+    for (const std::pair<std::string, std::string>& row : rows)
+    {
+        col0 = std::max(col0, row.first.size());
+        col1 = std::max(col1, row.second.size());
+    }
+
+    out << "\n";
+    out << std::string(col0, '-') << "-+-" << std::string(col1, '-') << "\n";
+    for (const std::pair<std::string, std::string>& row : rows)
+    {
+        out << row.first << std::string(col0 - row.first.size(), ' ')
+            << " | "
+            << row.second << std::string(col1 - row.second.size(), ' ')
+            << "\n";
+    }
+    out << "\n";
 }
 
 

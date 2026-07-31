@@ -498,33 +498,33 @@ To view what properties are available for a device, channel, or group, create a 
 
 **C++**
 ```cpp
-daq_utils::DaqPropertyInspector inspector(instance);
+daq_utils::DaqPropertyInspector propInspector(instance);
 ```
 
 **Python**
 ```python
-inspector = daq_utils.DaqPropertyInspector(instance)
+prop_inspector = daq_utils.DaqPropertyInspector(instance)
 ```
 
 **C#**
 ```csharp
-var inspector = new DaqPropertyInspector(instance);
+var propInspector = new DaqPropertyInspector(instance);
 ```
 To inspect a property:
 
 **C++**
 ```cpp
-inspector.Describe(node, "Setup.Configure.CommunicationProtocol");
+propInspector.Describe(node, "Setup.Configure.CommunicationProtocol");
 ```
 
 **Python**
 ```python
-inspector.describe(node, 'Setup.Configure.CommunicationProtocol')
+prop_inspector.describe(node, 'Setup.Configure.CommunicationProtocol')
 ```
 
 **C#**
 ```csharp
-inspector.Describe(node, "Setup.Configure.CommunicationProtocol");
+propInspector.Describe(node, "Setup.Configure.CommunicationProtocol");
 ```
 
 ### Inspecting types
@@ -533,34 +533,34 @@ To view what fields/values are available for openDAQ `Enumeration` and `Struct` 
 
 **C++**
 ```cpp
-daq_utils::DaqTypeInspector inspector(instance);
+daq_utils::DaqTypeInspector typeInspector(instance);
 ```
 
 **Python**
 ```python
-inspector = daq_utils.DaqTypeInspector(instance)
+type_inspector = daq_utils.DaqTypeInspector(instance)
 ```
 
 **C#**
 ```csharp
-var inspector = new DaqTypeInspector(instance);
+var typeInspector = new DaqTypeInspector(instance);
 ```
 
 To inspect a type:
 
 **C++**
 ```cpp
-inspector.Describe("AutoCalCompletionFlag");
+typeInspector.Describe("AutoCalCompletionFlag");
 ```
 
 **Python**
 ```python
-inspector.describe('AutoCalCompletionFlag')
+type_inspector.describe('AutoCalCompletionFlag')
 ```
 
 **C#**
 ```csharp
-inspector.Describe("AutoCalCompletionFlag");
+typeInspector.Describe("AutoCalCompletionFlag");
 ```
 
 ### Creating typed values

@@ -151,15 +151,25 @@ class DaqPropertyInspector:
 
     def describe(self, root, path):
         prop = self._get_known_property(root, path)
-        
+
         raw = str(prop.value_type)
         type_str = raw.split("CoreType.")[-1]
         if type_str.startswith("ct"):
             type_str = type_str[2:]
 
-        print(f'Type: {type_str}')
-        print(f'Description: {prop.description}')
-        print(f'Default Value: {prop.default_value}')    
+        rows = [
+            ("Type", type_str),
+            ("Description", str(prop.description)),
+            ("Default value", str(prop.default_value)),
+        ]
+        col0 = max(len(label) for label, _ in rows)
+        col1 = max(len(value) for _, value in rows)
+
+        print()
+        for label, value in rows:
+            print(f'{label:<{col0}} | {value:<{col1}}')
+        print(f'{"-" * col0}-+-{"-" * col1}')
+        print()
 
 
 def _field_type_label(value):
