@@ -166,9 +166,9 @@ class DaqPropertyInspector:
         col1 = max(len(value) for _, value in rows)
 
         print()
+        print(f'{"-" * col0}-+-{"-" * col1}')
         for label, value in rows:
             print(f'{label:<{col0}} | {value:<{col1}}')
-        print(f'{"-" * col0}-+-{"-" * col1}')
         print()
 
 
