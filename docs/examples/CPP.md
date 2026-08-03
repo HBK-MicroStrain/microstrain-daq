@@ -80,7 +80,7 @@ daq_utils::DaqTypeFactory daqTypes(instance);
 
 daq::BaseObjectPtr chGroups = daq_utils::Call(node, "Capabilities.ChannelGroups");
 daq::ListPtr<daq::IBaseObject> groupsList = chGroups.asPtr<daq::IPropertyObject>().getPropertyValue("Result");
-daq::EnumerationPtr linearEqSetting = daqTypes.MakeEnum("ChannelGroupSetting", "chSetting_linearEquation");
+daq::EnumerationPtr linearEqSetting = daqTypes.MakeEnum("mscl_WirelessTypes_ChannelGroupSetting", "chSetting_linearEquation");
 
 for (size_t i = 0; i < groupsList.getCount(); ++i)
 {
@@ -114,10 +114,10 @@ daq_utils::DaqTypeFactory daqTypes(instance);
 std::cout << "\nChanging configuration settings..." << "\n";
 
 // Set the configuration options that we want to change
-node.asPtr<daq::IPropertyObject>().setPropertyValue("Setup.Configure.Power.DefaultMode", daqTypes.MakeEnum("DefaultMode", "defaultMode_idle"));
+node.asPtr<daq::IPropertyObject>().setPropertyValue("Setup.Configure.Power.DefaultMode", daqTypes.MakeEnum("mscl_WirelessTypes_DefaultMode", "defaultMode_idle"));
 node.asPtr<daq::IPropertyObject>().setPropertyValue("Setup.Configure.Power.InactivityTimeout", 7200);
-node.asPtr<daq::IPropertyObject>().setPropertyValue("Control.Sample.SamplingMode", daqTypes.MakeEnum("SamplingMode", "samplingMode_sync"));
-node.asPtr<daq::IPropertyObject>().setPropertyValue("Control.Sample.SampleRate", daqTypes.MakeEnum("WirelessSampleRate", "sampleRate_256Hz"));
+node.asPtr<daq::IPropertyObject>().setPropertyValue("Control.Sample.SamplingMode", daqTypes.MakeEnum("mscl_WirelessTypes_SamplingMode", "samplingMode_sync"));
+node.asPtr<daq::IPropertyObject>().setPropertyValue("Control.Sample.SampleRate", daqTypes.MakeEnum("mscl_WirelessTypes_WirelessSampleRate", "sampleRate_256Hz"));
 node.asPtr<daq::IPropertyObject>().setPropertyValue("Control.Sample.UnlimitedDuration", true);
 
 // Attempt to verify the configuration with the Node we want to apply it to

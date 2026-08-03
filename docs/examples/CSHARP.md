@@ -122,10 +122,10 @@ DaqTypeFactory daqTypes = new DaqTypeFactory(instance);
 Console.WriteLine("\nChanging configuration settings... \n");
 
 // Set the configuration options that we want to change
-node.Cast<PropertyObject>().SetPropertyValue("Setup.Configure.Power.DefaultMode", daqTypes.MakeEnum("DefaultMode", "defaultMode_idle"));
+node.Cast<PropertyObject>().SetPropertyValue("Setup.Configure.Power.DefaultMode", daqTypes.MakeEnum("mscl_WirelessTypes_DefaultMode", "defaultMode_idle"));
 node.Cast<PropertyObject>().SetPropertyValue("Setup.Configure.Power.InactivityTimeout", 7200);
-node.Cast<PropertyObject>().SetPropertyValue("Control.Sample.SamplingMode", daqTypes.MakeEnum("SamplingMode", "samplingMode_sync"));
-node.Cast<PropertyObject>().SetPropertyValue("Control.Sample.SampleRate", daqTypes.MakeEnum("WirelessSampleRate", "sampleRate_256Hz"));
+node.Cast<PropertyObject>().SetPropertyValue("Control.Sample.SamplingMode", daqTypes.MakeEnum("mscl_WirelessTypes_SamplingMode", "samplingMode_sync"));
+node.Cast<PropertyObject>().SetPropertyValue("Control.Sample.SampleRate", daqTypes.MakeEnum("mscl_WirelessTypes_WirelessSampleRate", "sampleRate_256Hz"));
 node.Cast<PropertyObject>().SetPropertyValue("Control.Sample.UnlimitedDuration", true);
 
 // Attempt to verify the configuration with the Node we want to apply it to

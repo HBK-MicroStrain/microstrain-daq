@@ -129,7 +129,7 @@ for groups in chGroups.get_property_value('Result'):
 
     for settings in groups.Settings:
         # If the group contains the linear equation setting
-        if settings == daq_types.enum("ChannelGroupSetting", "chSetting_linearEquation"):
+        if settings == daq_types.enum("mscl_WirelessTypes_ChannelGroupSetting", "chSetting_linearEquation"):
             # We can now pass the channel mask for this group to the function.
             # Note: once this channel mask is known for a specific node (+ fw version), it should never change
             eq = daq_utils.call(node, "Setup.Configure.Calibration.GetLinearEquation", groups.Mask)
@@ -147,10 +147,10 @@ To set current configuration settings for a node:
 print("\nChanging configuration settings...", end="")
 
 # Set the configuration options that we want to change
-node.set_property_value('Setup.Configure.Power.DefaultMode', daq_types.enum("DefaultMode", "defaultMode_idle"))
+node.set_property_value('Setup.Configure.Power.DefaultMode', daq_types.enum("mscl_WirelessTypes_DefaultMode", "defaultMode_idle"))
 node.set_property_value('Setup.Configure.Power.InactivityTimeout', 7200)
-node.set_property_value('Control.Sample.SamplingMode', daq_types.enum("SamplingMode", "samplingMode_sync"))
-node.set_property_value('Control.Sample.SampleRate', daq_types.enum("WirelessSampleRate", "sampleRate_256Hz"))
+node.set_property_value('Control.Sample.SamplingMode', daq_types.enum("mscl_WirelessTypes_SamplingMode", "samplingMode_sync"))
+node.set_property_value('Control.Sample.SampleRate', daq_types.enum("mscl_WirelessTypes_WirelessSampleRate", "sampleRate_256Hz"))
 node.set_property_value('Control.Sample.UnlimitedDuration', True)
 
 # Attempt to verify the configuration with the Node we want to apply it to
