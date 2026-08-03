@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <iostream>
 #include <ostream>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -49,6 +51,57 @@ std::string FieldTypeLabel(const daq::BaseObjectPtr& value)
         return "Enum<" + std::string(e.getEnumerationType().getName()) + ">";
     }
     return CoreTypeToString(ct);
+}
+
+// Splits paths by "." and traverses known path to find the requested property. Throws if any part of the path is invalid.
+daq::PropertyPtr GetKnownProperty(daq::PropertyObjectPtr root, const std::string& path)
+{
+    if (path.empty())
+    {
+        throw std::runtime_error("Property path cannot be empty");
+    }
+
+    daq::PropertyObjectPtr obj = std::move(root);
+    std::vector<std::string> parts;
+
+    size_t start = 0;
+    while (true)
+    {
+        const size_t dotPos = path.find('.', start);
+        if (dotPos == std::string::npos)
+        {
+            parts.push_back(path.substr(start));
+            break;
+        }
+
+        parts.push_back(path.substr(start, dotPos - start));
+        start = dotPos + 1;
+    }
+
+    if (parts.back().empty())
+    {
+        throw std::runtime_error("Invalid property path '" + path + "'");
+    }
+
+    for (size_t i = 0; i + 1 < parts.size(); ++i)
+    {
+        const std::string& groupName = parts[i];
+        if (groupName.empty())
+        {
+            throw std::runtime_error("Invalid property path '" + path + "'");
+        }
+
+        daq::BaseObjectPtr groupValue = obj.getPropertyValue(daq::String(groupName));
+        daq::PropertyObjectPtr groupObj = groupValue.asPtrOrNull<daq::IPropertyObject>();
+        if (!groupObj.assigned())
+        {
+            throw std::runtime_error("'" + groupName + "' is not a property group in '" + path + "'");
+        }
+
+        obj = std::move(groupObj);
+    }
+
+    return obj.getProperty(daq::String(parts.back()));
 }
 
 // Visits every visible property in depth-first order, keeping related subgroups adjacent
@@ -188,6 +241,50 @@ void DaqTypeInspector::Describe(const std::string& typeName, std::ostream& out)
         }
         out << "\n";
     }
+}
+
+
+DaqPropertyInspector::DaqPropertyInspector(daq::InstancePtr instance)
+    : instance_(instance)
+{
+}
+
+void DaqPropertyInspector::Describe(daq::PropertyObjectPtr root, const std::string& path)
+{
+    Describe(root, path, std::cout);
+}
+
+void DaqPropertyInspector::Describe(daq::PropertyObjectPtr root, const std::string& path, std::ostream& out)
+{
+    daq::PropertyPtr prop = detail::GetKnownProperty(root, path);
+
+    std::ostringstream defaultValueStream;
+    defaultValueStream << prop.getDefaultValue();
+
+    std::vector<std::pair<std::string, std::string>> rows = {
+        {"Type", detail::CoreTypeToString(prop.getValueType())},
+        {"Description", std::string(prop.getDescription())},
+        {"Default value", defaultValueStream.str()}
+    };
+
+    size_t col0 = 0;
+    size_t col1 = 0;
+    for (const std::pair<std::string, std::string>& row : rows)
+    {
+        col0 = std::max(col0, row.first.size());
+        col1 = std::max(col1, row.second.size());
+    }
+
+    out << "\n";
+    out << std::string(col0, '-') << "-+-" << std::string(col1, '-') << "\n";
+    for (const std::pair<std::string, std::string>& row : rows)
+    {
+        out << row.first << std::string(col0 - row.first.size(), ' ')
+            << " | "
+            << row.second << std::string(col1 - row.second.size(), ' ')
+            << "\n";
+    }
+    out << "\n";
 }
 
 
