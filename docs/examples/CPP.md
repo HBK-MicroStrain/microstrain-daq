@@ -38,7 +38,7 @@ else
 
 ### Setting to Idle
 
-The **Set to Idle** command is used to put a Node that is sampling, or sleeping, back into the Idle Mode so that it may be communicated with.
+The `Set to Idle` command is used to put a Node that is sampling, or sleeping, back into the Idle Mode so that it may be communicated with.
 
 ```cpp
 #include <thread>
@@ -52,17 +52,20 @@ std::cout << "Setting Node to Idle" << "\n";
 while (true)
 {
     daq::BaseObjectPtr result = daq_utils::Call(node, "Control.SetToIdleProgress").asPtr<daq::IPropertyObject>();
+
     bool success = result.getPropertyValue("Success");
     std::string state = result.getPropertyValue("State");
     std::string message = result.getPropertyValue("Message");
     std::cout << "Status: [Success=" << success << ", State=" << state << ", Message=" << message << "]\n";
+
     if (state == "Complete" || state == "Failed" || state == "Canceled")
         break;
+
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 ```
 
-You can also cancel the Set to Idle command:
+You can also cancel the `Set to Idle` command:
 
 ```cpp
 daq::BaseObjectPtr cancel_result = daq_utils::Call(node, "Control.CancelSetToIdle").asPtr<daq::IPropertyObject>();
@@ -446,7 +449,7 @@ while (true)
             std::vector<double> values(count);
             std::vector<uint64_t> timestamps(count);
             reader.readWithDomain(values.data(), timestamps.data(), &count);
-            
+
             for (daq::SizeT i = 0; i < count; ++i)
             {
                 std::cout << channel_name << ": " << values[i] << " @ " << timestamps[i] << "\n";
