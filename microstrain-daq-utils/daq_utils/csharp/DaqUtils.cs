@@ -122,6 +122,61 @@ public class DaqTypeInspector
     }
 }
 
+public class DaqPropertyInspector
+{
+    private readonly Instance _instance;
+
+    public DaqPropertyInspector(Instance instance) =>
+        _instance = instance;
+
+// Splits paths by "." and traverses known path to find the requested property. Throws if any part of the path is invalid.
+    private static Property GetKnownProperty(PropertyObject root, string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            throw new ArgumentException("Property path cannot be empty", nameof(path));
+
+        string[] parts = path.Split('.');
+        if (parts.Any(string.IsNullOrEmpty))
+            throw new ArgumentException($"Invalid property path '{path}'", nameof(path));
+
+        PropertyObject obj = root;
+        foreach (string groupName in parts[..^1])
+        {
+            BaseObject groupValue = obj.GetPropertyValue(groupName);
+            PropertyObject? groupObj = groupValue.Cast<PropertyObject>();
+            if (groupObj == null)
+                throw new InvalidOperationException($"'{groupName}' is not a property group in '{path}'");
+
+            obj = groupObj;
+        }
+
+        return obj.GetProperty(parts[^1]);
+    }
+
+    public void Describe(PropertyObject root, string path)
+    {
+        Property prop = GetKnownProperty(root, path);
+        string rawType = prop.ValueType.ToString();
+        string typeStr = rawType.StartsWith("ct", StringComparison.Ordinal) ? rawType[2..] : rawType;
+
+        var rows = new List<(string label, string value)>
+        {
+            ("Type", typeStr),
+            ("Description", prop.Description?.ToString() ?? string.Empty),
+            ("Default value", prop.DefaultValue?.ToString() ?? string.Empty)
+        };
+
+        int col0 = rows.Max(r => r.label.Length);
+        int col1 = rows.Max(r => r.value.Length);
+
+        Console.WriteLine();
+        Console.WriteLine($"{new string('-', col0)}-+-{new string('-', col1)}");
+        foreach (var (label, value) in rows)
+            Console.WriteLine($"{label.PadRight(col0)} | {value.PadRight(col1)}");
+        Console.WriteLine();
+    }
+}
+
 public static class DaqUtils
 {
     internal static string FieldTypeLabel(BaseObject value)

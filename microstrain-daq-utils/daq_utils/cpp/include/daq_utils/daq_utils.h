@@ -84,6 +84,30 @@ private:
     daq::TypeManagerPtr typeManager_;
 };
 
+/// @brief Inspects openDAQ properties from a root object using dot-notation paths.
+///
+/// @example
+///   DaqPropertyInspector inspector(channel);
+///   inspector.Describe("Setup.Configure.Sampling.LostBeaconTimeout");
+class DaqPropertyInspector
+{
+public:
+    /// @param instance The openDAQ instance to retrieve the context from.
+    explicit DaqPropertyInspector(daq::InstancePtr instance);
+
+    /// @brief Prints the type, description, and default value for a property to stdout.
+    /// @param path Dot-notation path from the root to the property.
+    void Describe(daq::PropertyObjectPtr root, const std::string& path);
+
+    /// @brief Prints the type, description, and default value for a property to the given stream.
+    /// @param path Dot-notation path from the root to the property.
+    /// @param out The output stream to write to.
+    void Describe(daq::PropertyObjectPtr root, const std::string& path, std::ostream& out);
+
+private:
+    daq::InstancePtr instance_;
+};
+
 /// @brief Returns the full dot-notation path of a property or group given its name.
 /// @param root The openDAQ object to search.
 /// @param name The property or group name to find.
