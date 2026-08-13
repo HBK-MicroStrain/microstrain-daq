@@ -41,15 +41,34 @@ else
 The **Set to Idle** command is used to put a Node that is sampling, or sleeping, back into the Idle Mode so that it may be communicated with.
 
 ```cpp
+#include <thread>
+#include <chrono>
+
 // The argument is the timeout in milliseconds
-daq::BaseObjectPtr result = daq_utils::Call(node, "Control.SetToIdle", 8000);
+daq_utils::Call(node, "Control.SetToIdle", 10000);
 
 std::cout << "Setting Node to Idle" << "\n";
 
-std::string complete = result.asPtr<daq::IPropertyObject>().getPropertyValue("Complete");
-std::string status = result.asPtr<daq::IPropertyObject>().getPropertyValue("Status");
-std::string success = result.asPtr<daq::IPropertyObject>().getPropertyValue("Success");
-std::cout << "Status: [Complete=" << complete << ", Status=" << status << ", Success=" << success << "]" << "\n";
+while (true)
+{
+    daq::BaseObjectPtr result = daq_utils::Call(node, "Control.SetToIdleProgress").asPtr<daq::IPropertyObject>();
+    bool success = result.getPropertyValue("Success");
+    std::string state = result.getPropertyValue("State");
+    std::string message = result.getPropertyValue("Message");
+    std::cout << "Status: [Success=" << success << ", State=" << state << ", Message=" << message << "]\n";
+    if (state == "Complete" || state == "Failed" || state == "Canceled")
+        break;
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+```
+
+You can also cancel the Set to Idle command:
+
+```cpp
+daq::BaseObjectPtr cancel_result = daq_utils::Call(node, "Control.CancelSetToIdle").asPtr<daq::IPropertyObject>();
+
+std::cout << cancel_result.getPropertyValue("Success") << "\n";
+std::cout << "State=" << state << "\n";
 ```
 
 ### Getting Current Configuration Settings
