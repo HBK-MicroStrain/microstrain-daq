@@ -85,18 +85,36 @@ else:
 
 ### Setting to Idle
 
-The **Set to Idle** command is used to put a Node that is sampling, or sleeping, back into the Idle Mode so that it may be communicated with.
+The `Set to Idle` command is used to put a Node that is sampling, or sleeping, back into the Idle Mode so that it may be communicated with.
 
 ```python
+import time
+
 # The argument is the timeout in milliseconds
-result = daq_utils.call(node, "Control.SetToIdle", 8000)
+daq_utils.call(node, "Control.SetToIdle", 10000)
 
 print("Setting Node to Idle")
 
-complete = result.get_property_value('Complete')
-status = result.get_property_value('Status')
-success = result.get_property_value('Success')
-print(f"Status: [Complete={complete}, Status={status}, Success={success}]")
+while True:
+
+    success = result.get_property_value('Success')
+    state = result.get_property_value('State')
+    message = result.get_property_value('Message')
+    print(f"Status: [Success={success}, State={state}, Message={message}]")
+
+    if (state == 'Complete' or state == 'Failed' or state == 'Canceled'):
+        break
+
+    time.sleep(1)
+```
+
+You can also cancel the `Set to Idle` command:
+
+```python
+cancel_result = daq_utils.call(node, "Control.CancelSetToIdle")
+
+print(result.get_property_value('Success'))
+print(f"State={state}")
 ```
 
 ### Getting Current Configuration Settings

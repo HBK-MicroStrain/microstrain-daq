@@ -38,18 +38,39 @@ else
 
 ### Setting to Idle
 
-The **Set to Idle** command is used to put a Node that is sampling, or sleeping, back into the Idle Mode so that it may be communicated with.
+The `Set to Idle` command is used to put a Node that is sampling, or sleeping, back into the Idle Mode so that it may be communicated with.
 
 ```c#
+using System.Threading;
+
 // The argument is the timeout in milliseconds
-BaseObject? result = DaqUtils.Call(node, "Control.SetToIdle", 8000);
+DaqUtils.Call(node, "Control.SetToIdle", 10000);
 
-Console.WriteLine("Setting Node to Idle \n");
+Console.WriteLine("Setting Node to Idle");
 
-BaseObject? complete = result?.Cast<PropertyObject>().GetPropertyValue("Complete");
-BaseObject? status = result?.Cast<PropertyObject>().GetPropertyValue("Status");
-BaseObject? success = result?.Cast<PropertyObject>().GetPropertyValue("Success");
-Console.WriteLine($"Status: [Complete= {complete}, Status= {status}, Success= {success}] \n");
+while (true)
+{
+    PropertyObject? result = DaqUtils.Call(node, "Control.SetToIdleProgress")?.Cast<PropertyObject>();
+
+    bool success = result?.GetPropertyValue("Success") ?? false;
+    string state = result?.GetPropertyValue("State")?.ToString() ?? string.Empty;
+    string message = result?.GetPropertyValue("Message")?.ToString() ?? string.Empty;
+    Console.WriteLine($"Status: [Success={success}, State={state}, Message={message}]");
+
+    if (state == "Complete" || state == "Failed" || state == "Canceled")
+        break;
+
+    Thread.Sleep(1000);
+}
+```
+
+You can also cancel the `Set to Idle` command:
+
+```c#
+PropertyObject? cancel_result = DaqUtils.Call(node, "Control.CancelSetToIdle")?.Cast<PropertyObject>();
+
+Console.WriteLine(cancel_result?.GetPropertyValue("Success"));
+Console.WriteLine($"State={state}");
 ```
 
 ### Getting Current Configuration Settings
@@ -96,7 +117,7 @@ foreach (BaseObject groupItem in groupsList)
     {
         IntegerObject? intSetting = setting.Cast<IntegerObject>();
         long settingValue = intSetting != null ? (long)intSetting : -1;
-        
+
         if (settingValue == linearEqValue)
         {
             IntegerObject? groupMask = group.Get("Mask")?.Cast<IntegerObject>();
@@ -287,10 +308,10 @@ while (nodeSignalReaders.Count == 0)
         {
             if (signal.DomainSignal is null) continue;
 
-            Daq.Core.OpenDAQ.StreamReader<double, ulong> reader = 
+            Daq.Core.OpenDAQ.StreamReader<double, ulong> reader =
                 OpenDAQFactory.CreateStreamReader<double, ulong>(
-                    signal, 
-                    ReadMode.Scaled, 
+                    signal,
+                    ReadMode.Scaled,
                     ReadTimeoutType.Any
             );
 
@@ -403,7 +424,7 @@ while (true)
             double[] values = new double[len];
             ulong[] timestamps = new ulong[len];
             item.Reader.ReadWithDomain(values, timestamps, ref count);
-            
+
             for (nuint i = 0; i < count; ++i)
             {
                 Console.WriteLine($"{item.ChannelName}: {values[i]} @ {timestamps[i]} \n");
